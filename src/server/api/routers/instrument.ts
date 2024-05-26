@@ -1,32 +1,24 @@
 import { z } from "zod";
 import { like, eq, and } from "drizzle-orm";
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import { instruments } from "~/server/db/schemas";
+import { instruments, instrumentsToTeachers } from "~/server/db/schemas";
+import { jsonAggBuildObject } from "~/server/db/drizzle-helpers";
 
 export const instrumentRouter = createTRPCRouter({
-  list: publicProcedure
-    .input(
-      z.object({
-        search: z.string().optional(),
-        instrumentId: z.string().optional(),
-      }),
-    )
-    .query(async ({ input, ctx }) => {
-      const { search, instrumentId } = input ?? {};
-      const conditions = [];
-
-      if (search) {
-        conditions.push(like(instruments.name, `%${search}%`));
-      }
-
-      if (instrumentId) {
-        conditions.push(eq(instruments.id, instrumentId));
-      }
-
+  list: publicProcedure.query(async ({ input, ctx }) => {
       const res = await ctx.db
-        .select()
+        .select({
+          id: instruments.id,
+          name: instruments.name,
+          teachers: jsonAggBuildObject({
+            id: instrumentsToTeachers.teacherId,
+          })
+        })
         .from(instruments)
-        .where(and(...conditions));
+        .leftJoin(
+          instrumentsToTeachers,
+          eq(instruments.id, instrumentsToTeachers.instrumentId),
+        ).groupBy(instruments.id);
       return res;
     }),
 });

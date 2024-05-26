@@ -53,6 +53,26 @@ declare module "next-auth/jwt" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
+  events: {
+    async signIn(message) {
+      console.log("EVENT: SIGN IN", message);
+    },
+    async signOut(message) {
+      console.log("EVENT: SIGN OUT", message);
+    },
+    async createUser(message) {
+      console.log("EVENT: CREATE USER", message);
+    },
+    async updateUser(message) {
+      console.log("EVENT: UPDATE USER", message);
+    },
+    async linkAccount(message) {
+      console.log("EVENT: LINK ACCOUNT", message);
+    },
+    async session(message) {
+      console.log("EVENT: SESSION", message);
+    },
+  },
   callbacks: {
     jwt({ token, user }: { token: JWT; user: User | undefined }) {
       if (user) {
@@ -73,9 +93,9 @@ export const authOptions: NextAuthOptions = {
           .from(users)
           .where(eq(users.id, token.sub))
           .limit(1);
-        //Assign role to session for use in front end
+        // Assign role to session for use in front end
         session.user.role = user?.role ?? "client";
-        //Assign role to token for use in middleware to check for admin access
+        // Assign role to token for use in middleware to check for admin access
         token.role = user?.role ?? "client";
       }
       return session;
@@ -87,8 +107,10 @@ export const authOptions: NextAuthOptions = {
   adapter: DrizzleAdapter(db, createTable) as Adapter,
   providers: [
     GoogleProvider({
+      allowDangerousEmailAccountLinking: true,
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
+      // creates a new user if one doesn't exist
       profile(profile: GoogleProfile) {
         return {
           id: profile.sub,

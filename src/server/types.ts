@@ -10,7 +10,12 @@ export const bookTypes = ["course", "exam", "other"] as const;
 export const zodBookTypes = z.enum(bookTypes);
 export type BookType = z.infer<typeof zodBookTypes>;
 
-export const lessonTypes = ["private", "semi-private", "class"] as const;
+export const lessonTypes = [
+  "private",
+  "semi-private",
+  "class",
+  "online",
+] as const;
 export const zodLessonTypes = z.enum(lessonTypes);
 export type LessonType = z.infer<typeof zodLessonTypes>;
 
@@ -36,6 +41,17 @@ export const days = [
 ] as const;
 export const zodDays = z.enum(days);
 export type Day = z.infer<typeof zodDays>;
+
+export const attendanceValues = [
+  "Attended",
+  "Cancelled",
+  "Late cancelled",
+  "Did not attend",
+  "We cancelled",
+  "Moved",
+] as const;
+export const zodAttendanceValues = z.enum(attendanceValues);
+export type AttendanceValues = z.infer<typeof zodAttendanceValues>;
 
 export interface GoogleProfile {
   aud: string;

@@ -1,21 +1,88 @@
 "use client";
-import React, { useEffect, useRef } from "react";
-const next5DaysThatAreDay = (day: string) => {
-  let date = new Date();
-  const days = [];
-  let iterations = 0;
-  while (days.length < 20 && iterations < 200) {
-    if (date.getDay().toString() === day) {
-      days.push(date);
+
+import React, { useState } from "react";
+import { determineDate } from "~/app/_utils/dateHelpers";
+import { zodDays } from "~/server/types";
+import { api } from "~/trpc/react";
+
+const Attendance = () => {
+  const [value, setValue] = useState("");
+
+  const handleClick = () => {
+    switch (value) {
+      case "":
+        setValue("Attended");
+        break;
+      case "Attended":
+        setValue("DNA");
+        break;
+      case "DNA":
+        setValue("C");
+        break;
+      case "C":
+        setValue("LC");
+        break;
+      case "LC":
+        setValue("");
+        break;
+      default:
+        setValue("");
     }
-    date = new Date(date.setDate(date.getDate() + 1));
-    iterations++;
-  }
-  return days;
+  };
+
+  return (
+    <div onClick={handleClick} style={{ cursor: "pointer" }}>
+      {value}
+    </div>
+  );
 };
 
-const Register = ({ params: { day } }: { params: { day: string } }) => {
-  const dummyDates = [...next5DaysThatAreDay(day)];
+const getDatesForDayOfWeek = (
+  dayNumber: number,
+  startDate: Date,
+  endDate: Date,
+) => {
+  const dates = [];
+  const currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    if (currentDate.getDay() === dayNumber) {
+      dates.push(new Date(currentDate));
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return dates;
+};
+
+const getDayNameFromInteger = (day: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() - date.getDay() + day);
+  return zodDays.parse(date.toLocaleDateString("en-US", { weekday: "long" }));
+};
+
+const Register = ({
+  params: { day },
+  startDate,
+  endDate,
+}: {
+  params: { day: string };
+  startDate: Date;
+  endDate: Date;
+}) => {
+  const { data: classes, isLoading } = api.register.getClassesForDay.useQuery({
+    day: getDayNameFromInteger(parseInt(day)),
+    startDate: startDate,
+    endDate: endDate,
+  });
+
+  if (isLoading || !classes) {
+    return <div>Loading...</div>;
+  }
+
+classes.map((c) => c.)
+
+  const dates = getDatesForDayOfWeek(parseInt(day), startDate, endDate);
 
   return (
     <div className="flex w-full">
@@ -29,22 +96,22 @@ const Register = ({ params: { day } }: { params: { day: string } }) => {
               <th className="sticky left-12 whitespace-nowrap border-r border-gray-200 bg-purple-200 p-1 px-2">
                 <p>Teacher</p>
               </th>
-              <th className="sticky left-24 whitespace-nowrap border-r border-gray-200 bg-purple-200 p-1 px-2">
+              <th className="sticky left-32 whitespace-nowrap border-r border-gray-200 bg-purple-200 p-1 px-2">
                 <p>Lesson</p>
               </th>
-              <th className="sticky left-36 whitespace-nowrap border-r border-gray-200 bg-purple-200 p-1 px-2">
+              <th className="sticky left-48 whitespace-nowrap border-r border-gray-200 bg-purple-200 p-1 px-2">
                 <p>Lesson Type</p>
               </th>
-              <th className="sticky left-48 whitespace-nowrap border-r border-gray-200 bg-purple-200 p-1 px-2">
+              <th className="sticky left-64 whitespace-nowrap border-r border-gray-200 bg-purple-200 p-1 px-2">
                 <p>First Name</p>
               </th>
-              <th className="sticky left-60 whitespace-nowrap border-r border-gray-200 bg-purple-200 p-1 px-2">
+              <th className="sticky left-80 whitespace-nowrap border-r border-gray-200 bg-purple-200 p-1 px-2">
                 <p>Last Name</p>
               </th>
-              {dummyDates.map((date, idx) => (
+              {dates.map((date) => (
                 <th
-                  key={date.toISOString() + idx}
-                  className="whitespace-nowrap border-r border-gray-200 p-1 px-2"
+                  key={date.toISOString()}
+                  className={`whitespace-nowrap border-r border-gray-200 p-1 px-2 ${determineDate(date) === "today" && "bg-purple-600/20"} ${determineDate(date) === "past" && "bg-gray-700/20"}`}
                 >
                   {date.toLocaleDateString()}
                 </th>
@@ -52,38 +119,66 @@ const Register = ({ params: { day } }: { params: { day: string } }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {[1, 2, 3, 4].map((num) => (
-              <tr key={num} className="hover:bg-purple-400/30">
-                <td className="sticky left-0 whitespace-nowrap border-r border-gray-200 bg-purple-200">
-                  <p className="p-1">16:00</p>
-                </td>
-                <td className="sticky left-12 whitespace-nowrap border-r border-gray-200 bg-purple-200">
-                  <p className="p-1 text-left">David</p>
-                </td>
-                <td className="sticky left-24 whitespace-nowrap border-r border-gray-200 bg-purple-200">
-                  <p className="p-1">Drums</p>
-                </td>
-                <td className="sticky left-36 whitespace-nowrap border-r border-gray-200 bg-purple-200">
-                  <p className="p-1">Class</p>
-                </td>
-                <td className="sticky left-48 whitespace-nowrap border-r border-gray-200 bg-purple-200">
-                  <p className=" max-w-32 overflow-clip p-1">Daniel</p>
-                </td>
-                <td className="sticky left-60 whitespace-nowrap border-r border-gray-200 bg-purple-200">
-                  <p className="max-w-32 overflow-clip p-1">Jordan</p>
-                </td>
-                {dummyDates.map((date, idx) => (
-                  <td key={date.toISOString() + idx}>
-                    <span className="flex gap-1">
-                      <input type="checkbox" />
-                      <p className="line-clamp-1 overflow-ellipsis">
-                        Other info maybe something long
+            {classes.map(
+              ({
+                id,
+                instrument,
+                regularTeacher,
+                startTime,
+                type,
+                pupils,
+                lessons,
+              }) =>
+                pupils.map(({ pupil }) => (
+                  <tr
+                    key={id + pupil.id}
+                    className={`hover:bg-purple-400/30 ${pupil.isDroppedOut && "line-through"}`}
+                  >
+                    <td className="sticky left-0 whitespace-nowrap border-r border-gray-200 bg-purple-200 ">
+                      <p className="p-1">{startTime}</p>
+                    </td>
+                    <td className="sticky left-12 whitespace-nowrap border-r border-gray-200 bg-purple-200">
+                      <p className="p-1 text-left">
+                        {regularTeacher?.user.name}
                       </p>
-                    </span>
-                  </td>
-                ))}
-              </tr>
-            ))}
+                    </td>
+                    <td className="sticky left-32 whitespace-nowrap border-r border-gray-200 bg-purple-200">
+                      <p className="p-1">{instrument?.name}</p>
+                    </td>
+                    <td className="sticky left-48 whitespace-nowrap border-r border-gray-200 bg-purple-200">
+                      <p className="p-1">{type?.name ?? "Unknown"}</p>
+                    </td>
+                    <td className="sticky left-64 whitespace-nowrap border-r border-gray-200 bg-purple-200">
+                      <p className=" max-w-32 overflow-clip p-1">
+                        {pupil.fName}
+                      </p>
+                    </td>
+                    <td className="sticky left-80 whitespace-nowrap border-r border-gray-200 bg-purple-200">
+                      <p className="max-w-32 overflow-clip p-1">
+                        {pupil.lName}
+                      </p>
+                    </td>
+                    {dates.map((date) => {
+                      const lesson = lessons.find(
+                        (l) => new Date(l.date).getDate() === date.getDate(),
+                      );
+                      const attendance = lesson?.attendance.find(
+                        ({ pupilId }) => pupilId === pupil.id,
+                      );
+                      return (
+                        <td key={attendance?.id}>
+                          <span className="flex gap-1">
+                            <Attendance />
+                            <p className="line-clamp-1 overflow-ellipsis">
+                              {attendance?.value}
+                            </p>
+                          </span>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                )),
+            )}
           </tbody>
         </table>
       </div>

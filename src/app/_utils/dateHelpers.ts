@@ -13,3 +13,19 @@ export const calculateAge = (dob: Date) => {
 
   return age;
 };
+
+export const determineDate = (date: Date) => {
+  // Ignore time for comparison
+  date.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (date < today) {
+    return "past";
+  } else if (date.getTime() === today.getTime()) {
+    return "today";
+  } else {
+    return "future";
+  }
+};

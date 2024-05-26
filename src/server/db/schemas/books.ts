@@ -1,7 +1,5 @@
 import { numeric, varchar } from "drizzle-orm/pg-core";
 import { createTable } from "../mainSchema";
-import { relations } from "drizzle-orm";
-import { instruments } from "./instruments";
 import { bookTypes } from "~/server/types";
 
 export const books = createTable("book", {
@@ -11,7 +9,3 @@ export const books = createTable("book", {
   price: numeric("price", { precision: 3, scale: 2 }).notNull(),
   imageUrl: varchar("imageUrl", { length: 255 }),
 });
-
-export const bookRelations = relations(books, ({ many }) => ({
-  instruments: many(instruments),
-}));

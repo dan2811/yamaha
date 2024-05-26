@@ -1,6 +1,5 @@
 import { date, text, varchar } from "drizzle-orm/pg-core";
 import { createTable } from "../mainSchema";
-import { relations } from "drizzle-orm";
 import { instruments } from "./instruments";
 import { tasterStatuses } from "~/server/types";
 import { createInsertSchema } from "drizzle-zod";
@@ -21,11 +20,11 @@ export const tasterEnquiry = createTable("taster_enquiry", {
     .default(new Date().toISOString()),
   instrumentId: varchar("instrumentId", { length: 255 })
     .notNull()
-    .references(() => instruments.id),
+    .references(() => instruments.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
 });
 
-export const tasterEnquiryRelations = relations(tasterEnquiry, ({ one }) => ({
-  instrument: one(instruments),
-}));
 
 export const insertTasterEnquiryZodSchema = createInsertSchema(tasterEnquiry);

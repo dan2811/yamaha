@@ -5,7 +5,7 @@ import BackButton from "../../@show/_backButton";
 import TasterStatus from "../../status";
 import AdminButton from "~/app/_components/admin/Button";
 import { usePathname, useRouter } from "next/navigation";
-import { calculateAge } from "~/app/_utils/calculateAge";
+import { calculateAge } from "~/app/_utils/dateHelpers";
 import CopyToClipboardButton from "~/app/_components/admin/CopyToClipboardButton";
 
 const TasterShow = ({ params }: { params: { id: string } }) => {
