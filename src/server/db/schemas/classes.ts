@@ -7,6 +7,7 @@ import {
   time,
   varchar,
   primaryKey,
+  integer,
 } from "drizzle-orm/pg-core";
 import { createTable } from "../mainSchema";
 import { instruments } from "./instruments";
@@ -26,6 +27,8 @@ export const classes = createTable("classes", {
   lengthInMins: interval("lengthInMins", { fields: "minute" }).notNull(),
   day: varchar("day", { enum: days }).notNull(),
   isStarted: boolean("isStarted").notNull().default(false),
+  maxPupils: integer("maxPupils").notNull(),
+  startDate: date("startDate", { mode: "string" }),
   instrumentId: varchar("instrumentId", { length: 255 }).references(
     () => instruments.id,
     {

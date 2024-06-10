@@ -331,12 +331,14 @@ const insertClasses = async ({
     {
       id: randomUUID(),
       day: "Monday",
-      lengthInMins: 60,
+      lengthInMins: "60",
       startTime: "16:00",
+      maxPupils: 8,
       instrumentId: createdInstruments.find((instr) => instr.name === "Drums")!
         .id,
+
       roomId: createdRooms.find((room) => room.name === "Room 3")!.id,
-      teacherId: createdTeachers.find(
+      regularTeacherId: createdTeachers.find(
         (teacher) =>
           teacher.userId ===
           createdUsers.find((user) => user.email === userData.david.email)!.id,

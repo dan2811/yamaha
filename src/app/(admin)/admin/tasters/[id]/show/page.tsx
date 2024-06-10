@@ -2,19 +2,13 @@
 import React from "react";
 import { api } from "~/trpc/react";
 import BackButton from "../../@show/_backButton";
-import TasterStatus from "../../status";
-import AdminButton from "~/app/_components/admin/Button";
-import { usePathname, useRouter } from "next/navigation";
 import { calculateAge } from "~/app/_utils/dateHelpers";
-import CopyToClipboardButton from "~/app/_components/admin/CopyToClipboardButton";
+import { InfoCard } from "~/app/_components/admin/InfoCard";
 
 const TasterShow = ({ params }: { params: { id: string } }) => {
   const { data, isLoading, isError, error } = api.taster.show.useQuery({
     id: params.id,
   });
-
-  const router = useRouter();
-  const path = usePathname();
 
   if (isLoading) return <p>Loading...</p>;
   if (!data ?? !data?.length ?? !data[0]) throw new Error("No data found");
@@ -59,36 +53,3 @@ const TasterShow = ({ params }: { params: { id: string } }) => {
 };
 
 export default TasterShow;
-
-const InfoCard = ({
-  info,
-  children,
-  title,
-}: {
-  title: string;
-  info: Record<string, string | undefined | null>;
-  children?: React.ReactNode;
-}) => {
-  return (
-    <section className="rounded-md bg-purple-500/10 p-4 shadow-md shadow-purple-900/80">
-      <div className="flex flex-col space-y-2">
-        <h3 className="text-lg font-bold">{title}</h3>
-        {Object.entries(info).map(([key, value]) => (
-          <div key={key}>
-            <label className="font-light">{key}:</label>
-            <span className="flex">
-              <p className="w-fit overflow-auto rounded p-1 md:text-lg">
-                {!value ? "-" : value}
-              </p>
-              <CopyToClipboardButton
-                textToCopy={value}
-                className="px-2 hover:bg-slate-300/50"
-              />
-            </span>
-          </div>
-        ))}
-      </div>
-      {children}
-    </section>
-  );
-};

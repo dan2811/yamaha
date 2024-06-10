@@ -4,7 +4,7 @@ import AdminButton from "~/app/_components/admin/Button";
 import type { instruments } from "~/server/db/schemas";
 import { api } from "~/trpc/react";
 
-const EditInstruments = ({
+const EditInstrumentsModal = ({
   teacherId,
   onComplete,
   isOpen,
@@ -32,8 +32,6 @@ const EditInstruments = ({
     setSelectedOption(event.target.value);
 
   if (allInstrumentsIsLoading) return <div>Loading...</div>;
-
-  console.log(allInstruments);
 
   return isOpen ? (
     <div>
@@ -103,4 +101,4 @@ const EditInstruments = ({
   ) : null;
 };
 
-export default EditInstruments;
+export default EditInstrumentsModal;

@@ -80,8 +80,6 @@ const Register = ({
     return <div>Loading...</div>;
   }
 
-classes.map((c) => c.)
-
   const dates = getDatesForDayOfWeek(parseInt(day), startDate, endDate);
 
   return (

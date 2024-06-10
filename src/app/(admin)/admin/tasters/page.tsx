@@ -38,7 +38,6 @@ const TasterList = () => {
         </thead>
         <tbody>
           {data?.map(({ taster_enquiry: taster, instrument }, index) => {
-            console.log("INTERNAL NOT: ", taster.internalNotes);
             return (
               <tr
                 title={"test"}

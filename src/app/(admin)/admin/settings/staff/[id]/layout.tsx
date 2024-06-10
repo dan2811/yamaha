@@ -1,9 +1,15 @@
 "use client";
 import React, { type ReactNode } from "react";
-import EditInstruments from "~/app/_components/admin/AddInstrumentToTeacherModal";
+import EditInstrumentsModal from "./AddInstrumentToTeacherModal";
 import AdminButton from "~/app/_components/admin/Button";
 import InstrumentPill from "~/app/_components/admin/InstrumentPill";
 import { api } from "~/trpc/react";
+import EditWorkingHoursModal from "./AddWorkingHoursToTeacherModal";
+import { Day, days } from "~/server/types";
+import {
+  parseDbTime,
+  transformNumberToWeekDay,
+} from "~/app/_utils/dateHelpers";
 
 const EditTeacher = ({
   params: { id },
@@ -20,38 +26,86 @@ const EditTeacher = ({
     refetch: refetchInstruments,
   } = api.instrument.list.useQuery();
 
-  const [isOpen, setIsOpen] = React.useState(false);
+  // const { data: allWorkingHours, isLoading: workingHoursIsLoading } =
+  //   api.teacher.getWorkingHours.useQuery({
+  //     teacherId: id,
+  //   });
+
+  const [isEditInstrumentsOpen, setIsEditInstrumentsOpen] =
+    React.useState(false);
+
+  // const [selectedDay, setSelectedDay] = React.useState<Day | undefined>();
+
   if (!teacher) {
     return <div>Teacher not found</div>;
   }
   return (
-    <div className="flex w-full flex-col gap-2 rounded-lg bg-purple-200/60 p-6 text-purple-950">
+    <div className="flex w-full flex-col gap-4 rounded-lg bg-purple-200/60 p-6 text-purple-950">
       <h3 className="text-2xl font-medium">{teacher.user?.name}</h3>
-      <p className="font-light">Instruments</p>
-      <div className="flex gap-2">
-        {teacher.instruments.map(({ name, id }) => (
-          <InstrumentPill
-            instrumentId={id}
-            name={name}
-            teacherId={teacher.id}
-            onDelete={() => {
-              void refetchTeachers();
-              void refetchInstruments();
-            }}
-            key={teacher.id + id}
-          />
-        ))}
-        <AdminButton onClick={() => setIsOpen(true)}>
-          + Add Instrument
-        </AdminButton>
+      <div>
+        <p className="font-light">Instruments</p>
+        <div className="flex flex-wrap gap-2">
+          {teacher.instruments?.length &&
+            teacher.instruments.map(({ name, id }) => {
+              return (
+                <InstrumentPill
+                  instrumentId={id}
+                  name={name}
+                  teacherId={id}
+                  onDelete={() => {
+                    void refetchTeachers();
+                    void refetchInstruments();
+                  }}
+                  key={id + teacher.id}
+                />
+              );
+            })}
+          <AdminButton onClick={() => setIsEditInstrumentsOpen(true)}>
+            + Add Instrument
+          </AdminButton>
+        </div>
       </div>
-      <EditInstruments
+      {/* <div>
+        <p className="font-light">Working days</p>
+        <div className="flex flex-wrap gap-2">
+          {days.map((day) => {
+            return (
+              <div
+                key={day + id}
+                className="flex w-32 flex-col gap-2 border-2 border-purple-300 p-2"
+              >
+                <p>{day}</p>
+                {allWorkingHours
+                  ?.filter(
+                    (shift) =>
+                      transformNumberToWeekDay(shift.dayOfWeek) === day,
+                  )
+                  ?.map(({ id, startTime, endTime }) => (
+                    <p key={id}>
+                      {parseDbTime(startTime)} - {parseDbTime(endTime)}
+                    </p>
+                  ))}
+                <AdminButton onClick={() => setSelectedDay(day)}>
+                  ✏️ Edit
+                </AdminButton>
+              </div>
+            );
+          })}
+        </div> 
+      </div> */}
+      {/* <EditWorkingHoursModal
+        day={selectedDay}
+        teacherId={id}
+        setIsOpen={setSelectedDay}
+        allWorkingHours={allWorkingHours}
+      /> */}
+      <EditInstrumentsModal
         refetchInstruments={refetchInstruments}
         allInstrumentsIsLoading={allInstrumentsIsLoading}
         allInstruments={allInstruments}
         teacherId={id}
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
+        isOpen={isEditInstrumentsOpen}
+        setIsOpen={setIsEditInstrumentsOpen}
         onComplete={() => refetchTeachers()}
       />
     </div>

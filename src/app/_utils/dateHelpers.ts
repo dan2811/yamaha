@@ -29,3 +29,20 @@ export const determineDate = (date: Date) => {
     return "future";
   }
 };
+
+export const parseDbTime = (time: string) => {
+  return time.slice(0, 5);
+};
+
+export const transformNumberToWeekDay = (day: number) => {
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  return days[day];
+};

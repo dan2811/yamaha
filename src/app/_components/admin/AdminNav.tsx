@@ -36,6 +36,10 @@ export default function AdminNav() {
       path: "/admin/tasters",
     },
     {
+      name: "New Classes",
+      path: "/admin/newClasses/list",
+    },
+    {
       name: "Register",
       path: `/admin/register/${new Date().getDay()}`,
     },
