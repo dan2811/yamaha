@@ -15,7 +15,7 @@ const EditTaster = ({ params }: { params: { id: string } }) => {
     data: instruments,
     isLoading: isInstrumentsLoading,
     status: instrumentsQueryStatus,
-  } = api.instrument.list.useQuery({});
+  } = api.instrument.list.useQuery();
   const { mutateAsync, status, reset } = api.taster.edit.useMutation();
 
   const inputClassNames =

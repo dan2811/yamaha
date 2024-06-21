@@ -61,12 +61,14 @@ export const classes = createTable("classes", {
   }),
 });
 
+// eg. "Complete beginners", "Debut - working towards Debut grade", "DE1 - working on Drum Encouters 1"
 export const classLevel = createTable("class_level", {
   id: varchar("id", { length: 255 }).notNull().primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
 });
 
+// eg. "Class", "Private", "Semi-Private"
 export const classType = createTable("class_type", {
   id: varchar("id", { length: 255 }).notNull().primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
@@ -74,6 +76,7 @@ export const classType = createTable("class_type", {
   price: numeric("price", { precision: 6, scale: 2 }).notNull(),
 });
 
+// The single occurence of a class is a lesson. Attendance is related to a lesson, not a class.
 export const lessons = createTable("lessons", {
   id: varchar("id", { length: 255 }).notNull().primaryKey(),
   classId: varchar("classId", { length: 255 })

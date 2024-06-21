@@ -245,6 +245,7 @@ const insertPupils = async ({
         fName: "Daniel",
         mNames: "Lee",
         lName: "Jordan",
+        dob: new Date("1994-11-28").toDateString(),
         userId: createdUsers.find(
           (usr) => usr.email === "djordandrums@gmail.com",
         )!.id,
@@ -254,12 +255,14 @@ const insertPupils = async ({
         fName: "Lily",
         mNames: "Rachael",
         lName: "Barker",
+        dob: new Date("1990-10-28").toDateString(),
       },
       {
         id: randomUUID(),
         fName: "Robert",
         mNames: "Gary",
         lName: "Scottorn",
+        dob: new Date("1994-11-28").toDateString(),
       },
     ])
     .returning();

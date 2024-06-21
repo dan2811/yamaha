@@ -1,4 +1,4 @@
-import { boolean, varchar } from "drizzle-orm/pg-core";
+import { boolean, date, varchar } from "drizzle-orm/pg-core";
 import { createTable } from "../mainSchema";
 import { users } from "./users";
 
@@ -9,6 +9,7 @@ export const pupils = createTable("pupil", {
   lName: varchar("lName", { length: 255 }).notNull(),
   isDroppedOut: boolean("isDroppedOut").default(false).notNull(),
   isEnrolled: boolean("isEnrolled").default(false).notNull(),
+  dob: date("dob").notNull(),
   userId: varchar("userId", { length: 255 }).references(() => users.id, {
     onDelete: "set null",
     onUpdate: "cascade",

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { count, eq } from "drizzle-orm";
 import { createTRPCRouter, teacherProcedure } from "../trpc";
 import {
+  classLevel,
   classes,
   classesToPupils,
   instruments,
@@ -10,6 +11,8 @@ import {
 } from "~/server/db/schemas";
 import { TRPCError } from "@trpc/server";
 import { jsonAggBuildObject } from "~/server/db/drizzle-helpers";
+import { zodDays } from "~/server/types";
+import { randomUUID } from "crypto";
 
 export const classesRouter = createTRPCRouter({
   listNewClasses: teacherProcedure.query(async ({ input, ctx }) => {
@@ -50,6 +53,50 @@ export const classesRouter = createTRPCRouter({
           cause: `Class with id: ${input.id} does not exist.`,
           message: "Class not found",
         });
+      return res[0];
+    }),
+  listClassLevels: teacherProcedure.query(async ({ ctx }) => {
+    const res = await ctx.db.select().from(classLevel);
+    return res;
+  }),
+  createNewClass: teacherProcedure
+    .input(
+      z.object({
+        startTime: z.string(),
+        lengthInMins: z.string(),
+        day: zodDays,
+        maxPupils: z.number(),
+        startDate: z.string(),
+        instrumentId: z.string(),
+        levelId: z.string(),
+        regularTeacherId: z.string(),
+      }),
+    )
+    .mutation(({ ctx, input }) => {
+      return ctx.db
+        .insert(classes)
+        .values({
+          ...input,
+          isStarted: false,
+          id: randomUUID(),
+          lengthInMins: input.lengthInMins,
+          startDate: input.startDate === "" ? undefined : input.startDate,
+        })
+        .execute();
+    }),
+  listPupils: teacherProcedure
+    .input(z.object({ classId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const res = await ctx.db
+        .select({
+          pupils: jsonAggBuildObject({
+            pupilId: classesToPupils.pupilId,
+          }),
+        })
+        .from(classes)
+        .leftJoin(classesToPupils, eq(classes.id, classesToPupils.classId))
+        .where(eq(classes.isStarted, false))
+        .groupBy(classes.id);
       return res[0];
     }),
 });

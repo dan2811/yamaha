@@ -38,7 +38,7 @@ const NewClassList = () => {
                   onClick={() => router.push(`/admin/newClasses/${id}`)}
                 >
                   <Instrument
-                    className="flex items-center justify-center"
+                    className="flex items-center justify-start"
                     id={instrumentId}
                   />
                   <td>{day}</td>
