@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { count, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { createTRPCRouter, teacherProcedure } from "../trpc";
 import {
   classLevel,
@@ -98,5 +98,37 @@ export const classesRouter = createTRPCRouter({
         .where(eq(classes.isStarted, false))
         .groupBy(classes.id);
       return res[0];
+    }),
+  removePupilFromClass: teacherProcedure
+    .input(
+      z.object({
+        classId: z.string(),
+        pupilId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await ctx.db
+          .delete(classesToPupils)
+          .where(
+            and(
+              eq(classesToPupils.classId, input.classId),
+              eq(classesToPupils.pupilId, input.pupilId),
+            ),
+          );
+        return { success: true };
+      } catch (e) {
+        console.error(e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to remove pupil from class",
+          cause:
+            e instanceof Error
+              ? e.message
+              : typeof e === "string"
+                ? e
+                : JSON.stringify(e),
+        });
+      }
     }),
 });

@@ -1,9 +1,10 @@
 "use client";
-import React, { ChangeEventHandler, useState } from "react";
+import React, { type ChangeEventHandler, useState } from "react";
 import toast from "react-hot-toast";
 import AdminButton from "~/app/_components/admin/Button";
 import LoadingSpinner from "~/app/_components/admin/LoadingSpinner";
-import { Day, days } from "~/server/types";
+import { SelectTeacher } from "~/app/_components/admin/SelectTeacher";
+import { type Day, days } from "~/server/types";
 import { api } from "~/trpc/react";
 
 interface FormData {
@@ -192,7 +193,8 @@ const validateFormData = (
   isStartDateUnknown: boolean,
 ): ValidateFormDataResult => {
   const result: ValidateFormDataResult = { isValid: false, errorMessages: [] };
-  if (formData.day === "") result.errorMessages.push("Please choose a day.");
+  if ((formData.day as typeof formData.day & "") === "")
+    result.errorMessages.push("Please choose a day.");
   if (formData.startTime === "")
     result.errorMessages.push("Start time is required.");
   if (parseInt(formData.lengthInMins) < 0)
@@ -243,41 +245,6 @@ const SelectClassLevel = ({
             {classLevels?.map(({ id, name }) => (
               <option key={id} value={id}>
                 {name}
-              </option>
-            ))}
-          </select>
-        </>
-      );
-  }
-};
-
-const SelectTeacher = ({
-  handleChange,
-}: {
-  handleChange: ChangeEventHandler<HTMLInputElement | HTMLSelectElement>;
-}) => {
-  const { data: teachers, status } = api.teacher.list.useQuery();
-  switch (status) {
-    case "error":
-      return <p>⛔️ Error loading teachers</p>;
-    case "pending":
-      return <LoadingSpinner />;
-    case "success":
-      return (
-        <>
-          <label>Teacher ID:</label>
-          <select
-            name="regularTeacherId"
-            defaultValue="please-choose"
-            className="p-2"
-            onChange={handleChange}
-          >
-            <option disabled value="please-choose">
-              Select
-            </option>
-            {teachers?.map(({ id, user }) => (
-              <option key={id} value={id}>
-                {user?.name}
               </option>
             ))}
           </select>

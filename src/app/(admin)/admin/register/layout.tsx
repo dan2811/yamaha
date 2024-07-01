@@ -1,7 +1,7 @@
 import React from "react";
 
-const RagisterLayout = ({ children }: { children: React.ReactNode }) => {
+const RegisterLayout = ({ children }: { children: React.ReactNode }) => {
   return <div>{children}</div>;
 };
 
-export default RagisterLayout;
+export default RegisterLayout;

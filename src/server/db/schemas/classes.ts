@@ -82,7 +82,7 @@ export const lessons = createTable("lessons", {
   classId: varchar("classId", { length: 255 })
     .notNull()
     .references(() => classes.id, { onDelete: "cascade", onUpdate: "cascade" }),
-  date: date("date", { mode: "string" }).notNull(),
+  date: date("date", { mode: "date" }).notNull(),
   startTime: time("startTime").notNull(),
   lengthInMins: interval("lengthInMins", { fields: "minute" }).notNull(),
   roomId: varchar("roomId", { length: 255 })

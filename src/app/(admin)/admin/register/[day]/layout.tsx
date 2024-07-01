@@ -30,7 +30,7 @@ const RegisterLayout = ({ params }: { params: { day: string } }) => {
   };
   return (
     <div className="flex sm:flex-col">
-      <div className="flex justify-between gap-2">
+      <div className="flex justify-between gap-2 p-2">
         <div></div>
         <DateRangeFilter
           endDate={endDate}
