@@ -6,7 +6,7 @@ import { jsonAggBuildObject } from "~/server/db/drizzle-helpers";
 import { TRPCError } from "@trpc/server";
 
 export const instrumentRouter = createTRPCRouter({
-  list: publicProcedure.query(async ({ input, ctx }) => {
+  list: publicProcedure.query(async ({ ctx }) => {
     const res = await ctx.db
       .select({
         id: instruments.id,

@@ -62,7 +62,7 @@ export interface UpdateClassFormData {
   classId: string;
   startTime: string;
   startDate: string;
-  day: string;
+  day: Day;
   regularTeacherId: string;
 }
 

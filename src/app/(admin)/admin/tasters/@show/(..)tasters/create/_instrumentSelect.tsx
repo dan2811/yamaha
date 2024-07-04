@@ -19,7 +19,7 @@ const InstrumentSelect = ({
     isLoading,
     isError,
     error,
-  } = api.instrument.list.useQuery({});
+  } = api.instrument.list.useQuery();
   if (isLoading) return <LoadingSpinner />;
   if (isError) return <p>Error loading instruments - {error.message}</p>;
   if (!instruments) return <p>No instruments found</p>;

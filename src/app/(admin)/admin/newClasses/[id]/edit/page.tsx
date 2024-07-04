@@ -9,7 +9,7 @@ import { SelectTeacher } from "~/app/_components/admin/SelectTeacher";
 import AdminButton from "~/app/_components/admin/Button";
 import toast from "react-hot-toast";
 import LoadingSpinner from "~/app/_components/admin/LoadingSpinner";
-import { updateClass } from "../serverActions";
+import { type UpdateClassFormData, updateClass } from "../serverActions";
 import { useRouter } from "next/navigation";
 
 const EditNewClass = ({ params: { id } }: { params: { id: string } }) => {
@@ -21,7 +21,7 @@ const EditNewClass = ({ params: { id } }: { params: { id: string } }) => {
   const [updating, setUpdating] = useState(false);
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<UpdateClassFormData>({
     classId: id,
     day: "Monday",
     regularTeacherId: "",

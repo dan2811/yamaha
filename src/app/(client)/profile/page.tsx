@@ -14,9 +14,9 @@ const Profile = () => {
           <p className="text-xl">
             Primary phone: {session.data?.user.phone1 ?? "Unknown"}
           </p>
-          <p className="text-xl">
+          {/* <p className="text-xl">
             Secondary phone: {session.data?.user.phone2 ?? "Unknown"}
-          </p>
+          </p> */}
         </div>
       </div>
       <div className="flex flex-col gap-4">
