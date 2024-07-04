@@ -1,13 +1,27 @@
 "use client";
-import React, { ReactNode, Ref, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import EditUser from "./_editUser";
+import type { InferSelectModel } from "drizzle-orm";
+import type { users } from "~/server/db/schemas";
+
+// temporary types
+type User = Partial<
+  InferSelectModel<typeof users> & {
+    lessons: {
+      instrument: string;
+      teacher: string;
+      day: string;
+      time: string;
+    }[];
+  }
+>;
 
 const Users = () => {
-  const [users, setUsers] = useState([
+  const [users] = useState<User[]>([
     {
       name: "John Doe",
       email: "john@example.com",
-      phone: "123-456-7890",
+      phone1: "123-456-7890",
       role: "admin",
       lessons: [
         {
@@ -21,7 +35,7 @@ const Users = () => {
     {
       name: "Jane Doe",
       email: "jane@doe.com",
-      phone: "123-456-7890",
+      phone1: "123-456-7890",
       role: "client",
       lessons: [
         {
@@ -34,8 +48,8 @@ const Users = () => {
     },
     // Add more users here
   ]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const editUserRef = useRef<HTMLElement>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const editUserRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -45,8 +59,13 @@ const Users = () => {
         !editUserRef.current.contains(event.target)
       ) {
         // Check if the event target is a row in the table
-        if (event.target.closest("tr")) {
-          return;
+        if (
+          "closest" in event.target &&
+          typeof event.target.closest === "function"
+        ) {
+          if (event.target.closest("tr")) {
+            return;
+          }
         }
         setSelectedUser(null);
       }
@@ -58,7 +77,7 @@ const Users = () => {
     };
   }, []);
 
-  const handleRowClick = (event: React.MouseEvent, user) => {
+  const handleRowClick = (event: React.MouseEvent, user: User) => {
     event.stopPropagation();
     setSelectedUser(user);
   };
@@ -90,8 +109,8 @@ const Users = () => {
               >
                 <td>{user.name}</td>
                 <td>{user.email}</td>
-                <td>{user.phone}</td>
-                <td>{user.role.toUpperCase()}</td>
+                <td>{user.phone1}</td>
+                <td>{user.role?.toUpperCase()}</td>
                 <td>{JSON.stringify(user.lessons)}</td>
               </tr>
             ))}
@@ -100,7 +119,7 @@ const Users = () => {
       </div>
       {selectedUser && (
         <div ref={editUserRef}>
-          <EditUser user={selectedUser} setSelectedUser={setSelectedUser} />
+          {/* <EditUser user={selectedUser} setSelectedUser={setSelectedUser} /> */}
         </div>
       )}
     </div>
