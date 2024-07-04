@@ -6,7 +6,7 @@ export default {
   schema: "./src/server/db/schemas/index.ts",
   dialect: "postgresql",
   dbCredentials: {
-    url: env.DATABASE_URL,
+    url: env.POSTGRES_URL,
   },
   tablesFilter: ["yamaha_*"],
 } satisfies Config;

@@ -1,24 +1,27 @@
+import type { InferSelectModel } from "drizzle-orm";
 import React, {
   type Dispatch,
   type SetStateAction,
   useEffect,
   useState,
+  type FormEvent,
 } from "react";
 import toast from "react-hot-toast";
+import type { users } from "~/server/db/schemas";
 import { roles } from "~/server/types";
 
 const EditUser = ({
   user,
   setSelectedUser,
 }: {
-  user: any;
+  user: InferSelectModel<typeof users>;
   setSelectedUser: Dispatch<SetStateAction<null>>;
 }) => {
-  const [name, setName] = useState<string>(user.name);
+  const [name, setName] = useState<string | null>(user.name);
   useEffect(() => {
     setName(user.name);
   }, [user]);
-  const handleEdit = (event) => {
+  const handleEdit = (event: FormEvent) => {
     event.preventDefault();
     // Handle edit logic here
   };
@@ -33,18 +36,20 @@ const EditUser = ({
           <label className="self-center">Name:</label>
           <input
             type="text"
-            value={name}
+            value={name ?? ""}
             onChange={(e) => setName(e.target.value)}
             className="p-2"
           />
           <label className="self-center">Email:</label>
           <input type="email" defaultValue={user.email} className="p-2" />
           <label className="self-center">Phone:</label>
-          <input type="tel" defaultValue={user.phone} className="p-2" />
+          <input type="tel" defaultValue={user.phone1 ?? ""} className="p-2" />
           <label className="self-center">Role:</label>
           <select defaultValue={user.role ?? "client"} className="p-2">
             {roles.map((role) => (
-              <option value={role}>{role.toUpperCase()}</option>
+              <option value={role} key={role}>
+                {role.toUpperCase()}
+              </option>
             ))}
           </select>
         </fieldset>

@@ -1,46 +1,62 @@
-import type { Dispatch, SetStateAction } from "react";
-import toast from "react-hot-toast";
+"use client";
 import AdminButton from "./Button";
+import { useSearchParams } from "next/navigation";
+import { type FormEvent, useRef } from "react";
+import { getYamahaMonthStartEnd } from "~/app/_utils/dateHelpers";
 
-export const DateRangeFilter = ({
-  startDate,
-  endDate,
-  setEndDate,
-  setStartDate,
-  reset,
-}: {
-  startDate: Date;
-  endDate: Date;
-  setStartDate: Dispatch<SetStateAction<Date>>;
-  setEndDate: Dispatch<SetStateAction<Date>>;
-  reset: () => void;
-}) => {
+export const DateRangeFilter = () => {
+  const searchParams = useSearchParams();
+
+  const form = useRef<HTMLFormElement>(null);
+
+  const { defaultStartDate, defaultEndDate } = getYamahaMonthStartEnd();
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const target = e.target as HTMLFormElement;
+    const startDate = target.startDate as HTMLInputElement;
+    const endDate = target.endDate as HTMLInputElement;
+
+    const newParams = new URLSearchParams(searchParams.toString());
+
+    if (startDate.value) {
+      newParams.set("startDate", startDate.value);
+    } else {
+      newParams.delete("startDate");
+    }
+
+    if (endDate.value) {
+      newParams.set("endDate", endDate.value);
+    } else {
+      newParams.delete("endDate");
+    }
+  };
+
+  const handleChange = () => {
+    form.current?.submit();
+  };
   return (
-    <div className="flex items-center gap-2 rounded bg-purple-500/20 p-2">
+    <form
+      className="flex items-center gap-2 rounded bg-purple-500/20 p-2"
+      ref={form}
+      onSubmit={onSubmit}
+    >
       <p>Start: </p>
       <input
         type="date"
-        value={startDate?.toISOString().split("T")[0]}
-        onChange={(e) => {
-          const date = new Date(e.target.value);
-          setStartDate(date);
-        }}
+        name="startDate"
+        defaultValue={searchParams.get("startDate") ?? defaultStartDate}
+        onChange={handleChange}
       />
       <p>End:</p>
       <input
         type="date"
-        value={endDate?.toISOString().split("T")[0]}
-        onChange={(e) => {
-          const date = new Date(e.target.value);
-          if (date < startDate) {
-            toast.error("End date cannot be before start date!");
-            setEndDate(startDate);
-          } else {
-            setEndDate(date);
-          }
-        }}
+        name="endDate"
+        defaultValue={searchParams.get("endDate") ?? defaultEndDate}
+        onChange={handleChange}
       />
-      <AdminButton onClick={() => reset()}>Reset</AdminButton>
-    </div>
+      <AdminButton onClick={() => onSubmit({} as FormEvent<HTMLFormElement>)}>
+        Reset
+      </AdminButton>
+    </form>
   );
 };

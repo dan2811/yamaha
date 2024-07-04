@@ -46,3 +46,29 @@ export const transformNumberToWeekDay = (day: number) => {
   ];
   return days[day];
 };
+
+export const getYamahaMonthStartEnd = () => {
+  const now = new Date();
+  const day = now.getDate();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+
+  let defaultStartDate: string;
+  let defaultEndDate: string;
+
+  if (day >= 1 && day <= 13) {
+    defaultStartDate = new Date(year, month - 1, 14, 12)
+      .toISOString()
+      .split("T")[0]!;
+    defaultEndDate = new Date(year, month, 13, 12).toISOString().split("T")[0]!;
+  } else {
+    defaultStartDate = new Date(year, month, 14, 12)
+      .toISOString()
+      .split("T")[0]!;
+    defaultEndDate = new Date(year, month + 1, 13, 12)
+      .toISOString()
+      .split("T")[0]!;
+  }
+
+  return { defaultStartDate, defaultEndDate };
+};

@@ -1,9 +1,13 @@
 "use client";
 
 import type { InferSelectModel } from "drizzle-orm";
+import { useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { determineDate } from "~/app/_utils/dateHelpers";
+import {
+  determineDate,
+  getYamahaMonthStartEnd,
+} from "~/app/_utils/dateHelpers";
 import type { attendance, classes, lessons, pupils } from "~/server/db/schemas";
 import { zodDays } from "~/server/types";
 import { api } from "~/trpc/react";
@@ -69,26 +73,26 @@ const getDayNameFromInteger = (day: number) => {
   return zodDays.parse(date.toLocaleDateString("en-US", { weekday: "long" }));
 };
 
-const Register = ({
-  params: { day },
-  startDate,
-  endDate,
-}: {
-  params: { day: string };
-  startDate: Date;
-  endDate: Date;
-}) => {
+const Page = ({ params: { day } }: { params: { day: string } }) => {
+  const { defaultStartDate, defaultEndDate } = getYamahaMonthStartEnd();
+  const searchParams = useSearchParams();
+  const startDate = searchParams.get("startDate") ?? defaultStartDate;
+  const endDate = searchParams.get("endDate") ?? defaultEndDate;
   const { data: classes, isLoading } = api.register.getClassesForDay.useQuery({
     day: getDayNameFromInteger(parseInt(day)),
-    startDate: startDate,
-    endDate: endDate,
+    startDate: new Date(startDate),
+    endDate: new Date(endDate),
   });
 
   if (isLoading || !classes) {
     return <div>Loading...</div>;
   }
 
-  const dates = getDatesForDayOfWeek(parseInt(day), startDate, endDate);
+  const dates = getDatesForDayOfWeek(
+    parseInt(day),
+    new Date(startDate),
+    new Date(endDate),
+  );
 
   return (
     <div className="flex w-full">
@@ -136,8 +140,6 @@ const Register = ({
     </div>
   );
 };
-
-export default Register;
 
 const TeacherName = ({ teacherId }: { teacherId: string | null }) => {
   if (!teacherId) return <>Unknown teacher</>;
@@ -283,3 +285,5 @@ const ClassTypeName = ({ typeId }: { typeId: string | null }) => {
   if (!type) return <p>Unknown type</p>;
   return <p>{type.name}</p>;
 };
+
+export default Page;
