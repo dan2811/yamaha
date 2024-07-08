@@ -72,3 +72,21 @@ export const getYamahaMonthStartEnd = () => {
 
   return { defaultStartDate, defaultEndDate };
 };
+
+export const getDatesForDayOfWeek = (
+  dayNumber: number,
+  startDate: Date,
+  endDate: Date,
+) => {
+  const dates = [];
+  const currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    if (currentDate.getDay() === dayNumber) {
+      dates.push(new Date(currentDate));
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return dates;
+};

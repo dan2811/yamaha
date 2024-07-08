@@ -4,8 +4,10 @@ import { db } from ".";
 import {
   classType,
   classes,
+  classesToPupils,
   instruments,
   instrumentsToTeachers,
+  lessons,
   pupils,
   rooms,
   roomsToInstruments,
@@ -13,7 +15,8 @@ import {
   users,
   usersToChildren,
 } from "./schemas";
-import { InferSelectModel } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
+import { Infer } from "next/dist/compiled/superstruct";
 
 const userData = {
   gail: {
@@ -285,6 +288,8 @@ const insertPupils = async ({
       userId: parents.find((parent) => parent.name === "Lee Jordan")!.id,
     },
   ]);
+
+  return createdPupils;
 };
 
 const insertClassTypes = async () => {
@@ -330,27 +335,76 @@ const insertClasses = async ({
   createdTeachers: InferSelectModel<typeof teacher>[];
   createdUsers: InferSelectModel<typeof users>[];
 }) => {
-  await db.insert(classes).values([
-    {
-      id: randomUUID(),
-      day: "Monday",
-      lengthInMins: "60",
-      startTime: "16:00",
-      maxPupils: 8,
-      instrumentId: createdInstruments.find((instr) => instr.name === "Drums")!
-        .id,
+  return await db
+    .insert(classes)
+    .values([
+      {
+        id: randomUUID(),
+        day: "Monday",
+        lengthInMins: "60",
+        startTime: "16:00",
+        maxPupils: 8,
+        instrumentId: createdInstruments.find(
+          (instr) => instr.name === "Drums",
+        )!.id,
 
-      roomId: createdRooms.find((room) => room.name === "Room 3")!.id,
-      regularTeacherId: createdTeachers.find(
-        (teacher) =>
-          teacher.userId ===
-          createdUsers.find((user) => user.email === userData.david.email)!.id,
-      )!.id,
+        roomId: createdRooms.find((room) => room.name === "Room 3")!.id,
+        regularTeacherId: createdTeachers.find(
+          (teacher) =>
+            teacher.userId ===
+            createdUsers.find((user) => user.email === userData.david.email)!
+              .id,
+        )!.id,
+      },
+    ])
+    .returning();
+};
+
+// const insertLessons = async ({
+//   createdClasses,
+// }: {
+//   createdClasses: InferSelectModel<typeof classes>[];
+// }) => {
+//   await Promise.all(
+//     createdClasses.map(async (c) => {
+//       await db.insert(lessons).values({
+//         id: randomUUID(),
+//         date: new Date(),
+//         classId: c.id,
+//         lengthInMins: c.lengthInMins,
+//         roomId: c.roomId,
+//         startTime: c.startTime,
+//         teacherId: c.regularTeacherId,
+//       });
+//     }),
+//   );
+// };
+
+const insertClassesToPupils = async ({
+  createdClasses,
+  createdPupils,
+}: {
+  createdClasses: InferSelectModel<typeof classes>[];
+  createdPupils: InferSelectModel<typeof pupils>[];
+}) => {
+  await db.insert(classesToPupils).values([
+    {
+      classId: createdClasses[0]!.id,
+      pupilId: createdPupils[0]!.id,
+    },
+    {
+      classId: createdClasses[0]!.id,
+      pupilId: createdPupils[1]!.id,
+    },
+    {
+      classId: createdClasses[0]!.id,
+      pupilId: createdPupils[2]!.id,
     },
   ]);
 };
 
 const main = async () => {
+  await db.delete(lessons);
   await db.delete(rooms);
   await db.delete(users);
   await db.delete(instruments);
@@ -374,6 +428,12 @@ const main = async () => {
     createdTeachers,
     createdUsers,
   });
+  const createdClassesToPupils = await insertClassesToPupils({
+    createdClasses,
+    createdPupils,
+  });
+
+  // const createdLessons = await insertLessons({ createdClasses });
 
   console.log("Seed complete!");
   process.exit(0);

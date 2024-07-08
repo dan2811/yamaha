@@ -79,12 +79,12 @@ export const classType = createTable("class_type", {
 // The single occurence of a class is a lesson. Attendance is related to a lesson, not a class.
 export const lessons = createTable("lessons", {
   id: varchar("id", { length: 255 }).notNull().primaryKey(),
-  classId: varchar("classId", { length: 255 })
-    .notNull()
-    .references(() => classes.id, { onDelete: "cascade", onUpdate: "cascade" }),
   date: date("date", { mode: "date" }).notNull(),
   startTime: time("startTime").notNull(),
   lengthInMins: interval("lengthInMins", { fields: "minute" }).notNull(),
+  classId: varchar("classId", { length: 255 })
+    .notNull()
+    .references(() => classes.id, { onDelete: "cascade", onUpdate: "cascade" }),
   roomId: varchar("roomId", { length: 255 })
     .notNull()
     .references(() => rooms.id, {
