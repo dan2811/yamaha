@@ -2,69 +2,96 @@
 
 import type { InferSelectModel } from "drizzle-orm";
 import { useSearchParams } from "next/navigation";
-import React, { useState } from "react";
+import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import {
   determineDate,
+  getDatesForDayOfWeek,
   getYamahaMonthStartEnd,
+  parseDbTime,
 } from "~/app/_utils/dateHelpers";
 import type { attendance, classes, lessons, pupils } from "~/server/db/schemas";
 import { zodDays } from "~/server/types";
 import { api } from "~/trpc/react";
 
-const Attendance = ({ att }: { att: InferSelectModel<typeof attendance> }) => {
-  const [value, setValue] = useState(att.value ?? "");
+const Attendance = ({
+  lessonId,
+  pupilId,
+  classId,
+  date,
+}: {
+  lessonId: string;
+  pupilId: string;
+  classId: string;
+  date: Date;
+}) => {
+  const options = {
+    Attended: "A",
+    DNA: "DNA",
+    C: "C",
+    LC: "LC",
+    Reset: "➕",
+  } as const;
 
-  const handleClick = () => {
-    switch (value) {
-      case "":
-        setValue("Attended");
-        break;
-      case "Attended":
-        setValue("DNA");
-        break;
-      case "DNA":
-        setValue("C");
-        break;
-      case "C":
-        setValue("LC");
-        break;
-      case "LC":
-        setValue("");
-        break;
-      default:
-        setValue("");
+  const [selectedOption, setSelectedOption] = useState<keyof typeof options>();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    if (event.target.value in options) {
+      setSelectedOption(event.target.value as keyof typeof options);
+    } else {
+      toast.error("Invalid attendance option");
     }
   };
 
-  console.log("Attendance value: ", value);
+  const displayValue: string = selectedOption ? options[selectedOption] : "➕";
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false); // Set dropdown to closed if click is outside
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div
-      onClick={handleClick}
-      className="h-full w-full cursor-pointer border-2 border-black"
+      onBlur={() => setIsDropdownOpen(false)}
+      ref={containerRef}
+      className="min-w-fit"
     >
-      {value ?? "Nothing"}
+      <div
+        className={`cursor-pointer border-r-2 p-2 ${isDropdownOpen && "hidden"}`}
+        onClick={() => {
+          setIsDropdownOpen(true);
+        }}
+      >
+        {displayValue}
+      </div>
+      <select
+        value={selectedOption}
+        onChange={handleSelectChange}
+        onSelect={() => setIsDropdownOpen(true)}
+        className={`h-full w-full cursor-pointer ${!isDropdownOpen && "hidden"}`}
+      >
+        <option disabled selected></option>
+        {Object.entries(options).map(([full]) => (
+          <option key={full} value={full}>
+            {full}
+          </option>
+        ))}
+      </select>
     </div>
   );
-};
-
-const getDatesForDayOfWeek = (
-  dayNumber: number,
-  startDate: Date,
-  endDate: Date,
-) => {
-  const dates = [];
-  const currentDate = new Date(startDate);
-
-  while (currentDate <= endDate) {
-    if (currentDate.getDay() === dayNumber) {
-      dates.push(new Date(currentDate));
-    }
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  return dates;
 };
 
 const getDayNameFromInteger = (day: number) => {
@@ -158,30 +185,43 @@ const InstrumentName = ({ instrumentId }: { instrumentId: string | null }) => {
 };
 
 const AttendanceInput = ({
-  lesson,
+  classId,
   pupilId,
+  date,
 }: {
-  lesson: InferSelectModel<typeof lessons>;
+  classId: string;
   pupilId: string;
+  date: Date;
 }) => {
-  const { data, isLoading } = api.register.getAttendanceForLesson.useQuery({
-    lessonId: lesson.id,
-    pupilId,
-  });
+  // const { data, isLoading } = api.register.getAttendanceForLesson.useQuery({
+  //   lessonId: lesson.id,
+  //   pupilId,
+  // });
 
-  if (isLoading) return <td>Loading...</td>;
-  if (!data?.length) return <td>Unknown</td>;
-  if (data.length > 1) {
-    toast.error(
-      `${data.length} attendance records found for this lesson. Please contact support, quoting the following: LESSON ID = ${lesson.id}. ATTENDANCE ID =  ${data[0]?.id}`,
-    );
-  }
-  const attendance = data[0];
-  if (!attendance) return null;
+  // if (isLoading) return <td>Loading...</td>;
+  // if (!data?.length) return <td>Unknown</td>;
+  // if (data.length > 1) {
+  //   toast.error(
+  //     `${data.length} attendance records found for this lesson. Please contact support, quoting the following: LESSON ID = ${lesson.id}. ATTENDANCE ID =  ${data[0]?.id}`,
+  //   );
+  // }
+  // const attendance = data[0];
+  // if (!attendance) return null;
   return (
-    <td key={attendance?.id}>
-      <span className="flex gap-1">
-        <Attendance att={attendance} />
+    <td key={classId + pupilId} className="border-l-2">
+      <span className="flex min-w-52 gap-1">
+        <Attendance
+          classId={classId}
+          pupilId={pupilId}
+          lessonId="test"
+          date={date}
+        />
+        <div className="line-clamp-2 max-h-12 overflow-ellipsis text-sm">
+          Lorem ipsum, dolor sit amet consectetur adipisicing elit. Qui
+          quibusdam dolorem veniam ducimus quo, voluptate ex nemo veritatis at
+          repellat cupiditate? Pariatur optio modi placeat, aliquid facere
+          blanditiis maxime quaerat?
+        </div>
       </span>
     </td>
   );
@@ -232,15 +272,13 @@ const PupilRow = ({
     },
   );
 
-  if (!lessons?.length) return null;
-
   return (
     <tr
       key={classe.id + pupil.id}
-      className={`hover:bg-purple-400/30 ${pupil.isDroppedOut && "line-through"}`}
+      className={`h-fit hover:bg-purple-400/30 ${pupil.isDroppedOut && "line-through"}`}
     >
       <td className="sticky left-0 whitespace-nowrap border-r border-gray-200 bg-purple-200 ">
-        <p className="p-1">{classe.startTime}</p>
+        <p className="p-1">{parseDbTime(classe.startTime)}</p>
       </td>
       <td className="sticky left-12 whitespace-nowrap border-r border-gray-200 bg-purple-200">
         <p className="p-1 text-left">
@@ -262,16 +300,12 @@ const PupilRow = ({
         <p className="max-w-32 overflow-clip p-1">{pupil.lName}</p>
       </td>
       {dates.map((date) => {
-        const lesson = lessons.find(
-          (l) => new Date(l.date).getDate() === date.getDate(),
-        );
-        console.log("lessons: ", lessons);
-        if (!lesson?.id) return null;
         return (
           <AttendanceInput
-            lesson={lesson}
+            date={date}
+            classId={classe.id}
             pupilId={pupil.id}
-            key={lesson?.id + pupil.id}
+            key={pupil.id + pupil.id}
           />
         );
       })}
