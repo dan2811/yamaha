@@ -3,9 +3,13 @@ import { createTable } from "../mainSchema";
 import { pupils } from "./pupils";
 import { lessons } from "./classes";
 import { attendanceValues } from "~/server/types";
+import { randomUUID } from "crypto";
 
 export const attendance = createTable("attendance", {
-  id: varchar("id", { length: 255 }).notNull().primaryKey(),
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(randomUUID),
   pupilId: varchar("pupilId", { length: 255 })
     .notNull()
     .references(() => pupils.id, {

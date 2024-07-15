@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, teacherProcedure } from "../trpc";
-import { zodDays } from "~/server/types";
+import { zodAttendanceValues, zodDays } from "~/server/types";
 import {
   attendance,
   classes,
@@ -8,8 +8,17 @@ import {
   lessons,
   pupils,
 } from "~/server/db/schemas";
-import { and, eq, getTableColumns, gte, lte } from "drizzle-orm";
+import {
+  and,
+  eq,
+  getTableColumns,
+  gte,
+  InferInsertModel,
+  lte,
+} from "drizzle-orm";
 import { jsonAggBuildObject } from "~/server/db/drizzle-helpers";
+import { randomUUID } from "crypto";
+import { TRPCError } from "@trpc/server";
 
 export const registerRouter = createTRPCRouter({
   getClassesForDay: teacherProcedure
@@ -52,21 +61,137 @@ export const registerRouter = createTRPCRouter({
   getAttendanceForLesson: teacherProcedure
     .input(
       z.object({
-        lessonId: z.string(),
+        classId: z.string(),
+        date: z.date(),
         pupilId: z.string(),
       }),
     )
     .query(async ({ input, ctx }) => {
-      return await ctx.db
+      const [lesson] = await ctx.db
+        .select()
+        .from(lessons)
+        .where(
+          and(
+            eq(lessons.classId, input.classId),
+            eq(lessons.date, input.date.toISOString()),
+          ),
+        )
+        .limit(1);
+
+      if (!lesson) {
+        return undefined;
+      }
+
+      const res = await ctx.db
         .select()
         .from(attendance)
         .where(
           and(
-            eq(attendance.lessonId, input.lessonId),
+            eq(attendance.lessonId, lesson.id),
             eq(attendance.pupilId, input.pupilId),
           ),
         )
         .limit(1);
+      return res[0] ?? undefined;
+    }),
+  markAttendance: teacherProcedure
+    .input(
+      z.object({
+        classId: z.string(),
+        date: z.date(),
+        pupilId: z.string(),
+        value: zodAttendanceValues.nullable(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const [lesson] = await ctx.db
+        .select()
+        .from(lessons)
+        .where(
+          and(
+            eq(lessons.classId, input.classId),
+            eq(lessons.date, input.date.toISOString()),
+          ),
+        )
+        .limit(1);
+
+      if (!lesson) {
+        try {
+          const [classs] = await ctx.db
+            .select()
+            .from(classes)
+            .where(eq(classes.id, input.classId))
+            .limit(1);
+
+          console.log("selected class", classs);
+
+          if (
+            !classs?.regularTeacherId ||
+            !classs?.roomId ||
+            !classs?.lengthInMins
+          ) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Class does not have all required fields",
+            });
+          }
+
+          const [lesson] = await ctx.db
+            .insert(lessons)
+            .values({
+              date: input.date.toISOString(),
+              classId: input.classId,
+              lengthInMins: classs.lengthInMins,
+              roomId: classs.roomId,
+              startTime: classs.startTime,
+              teacherId: classs.regularTeacherId,
+            })
+            .returning();
+
+          if (!lesson) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Could not create lesson",
+            });
+          }
+
+          await ctx.db.insert(attendance).values({
+            lessonId: lesson.id,
+            pupilId: input.pupilId,
+            value: input.value,
+          });
+          return;
+        } catch (error) {
+          console.error(error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            cause: error,
+          });
+        }
+      }
+
+      await ctx.db.insert(attendance).values({
+        lessonId: lesson.id,
+        pupilId: input.pupilId,
+        value: input.value,
+      });
+    }),
+  getLessonForClass: teacherProcedure
+    .input(z.object({ classId: z.string(), date: z.date() }))
+    .query(async ({ input, ctx }) => {
+      // get all lessons for a class between two dates
+      const res = await ctx.db
+        .select()
+        .from(lessons)
+        .where(
+          and(
+            eq(lessons.classId, input.classId),
+            eq(lessons.date, input.date.toISOString()),
+          ),
+        )
+        .limit(1);
+
+      return res[0] ?? null;
     }),
   getLessonsForClass: teacherProcedure
     .input(z.object({ classId: z.string(), after: z.date(), before: z.date() }))
@@ -78,8 +203,8 @@ export const registerRouter = createTRPCRouter({
         .where(
           and(
             eq(lessons.classId, input.classId),
-            gte(lessons.date, input.after),
-            lte(lessons.date, input.before),
+            gte(lessons.date, input.after.toISOString()),
+            lte(lessons.date, input.before.toISOString()),
           ),
         );
     }),

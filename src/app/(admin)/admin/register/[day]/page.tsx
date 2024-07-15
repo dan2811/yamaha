@@ -11,41 +11,89 @@ import {
   parseDbTime,
 } from "~/app/_utils/dateHelpers";
 import type { attendance, classes, lessons, pupils } from "~/server/db/schemas";
-import { zodDays } from "~/server/types";
+import { AttendanceValues, attendanceValues, zodDays } from "~/server/types";
 import { api } from "~/trpc/react";
 
 const Attendance = ({
-  lessonId,
   pupilId,
   classId,
   date,
 }: {
-  lessonId: string;
   pupilId: string;
   classId: string;
   date: Date;
 }) => {
+  console.log(date.toISOString(), date.toLocaleDateString());
+  const {
+    data: attendance,
+    isLoading: isLoadingAttendance,
+    fetchStatus,
+  } = api.register.getAttendanceForLesson.useQuery({
+    classId,
+    date,
+    pupilId,
+  });
+
+  const { mutateAsync, isPending } = api.register.markAttendance.useMutation();
+
   const options = {
     Attended: "A",
-    DNA: "DNA",
-    C: "C",
-    LC: "LC",
+    "Did not attend": "DNA",
+    Cancelled: "C",
+    "Late cancelled": "LC",
+    "We cancelled": "WC",
+    Moved: "M",
     Reset: "➕",
   } as const;
 
-  const [selectedOption, setSelectedOption] = useState<keyof typeof options>();
+  const [selectedOption, setSelectedOption] =
+    useState<keyof typeof options>("Reset");
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
+  useEffect(() => {
+    console.log("useEffect", fetchStatus);
+    setSelectedOption(attendance?.value ?? "Reset");
+  }, [fetchStatus]);
+
+  const handleSelectChange = async (event: ChangeEvent<HTMLSelectElement>) => {
+    const prevSelectedOption = selectedOption;
     if (event.target.value in options) {
       setSelectedOption(event.target.value as keyof typeof options);
+
+      const value: AttendanceValues | null =
+        event.target.value === "Reset"
+          ? null
+          : (event.target.value as AttendanceValues);
+
+      await mutateAsync(
+        {
+          classId,
+          pupilId,
+          date,
+          value,
+        },
+        {
+          onError: (e) => {
+            toast.error(e.message);
+            setSelectedOption(prevSelectedOption);
+          },
+          onSuccess: () => {
+            toast.success("Attendance updated");
+          },
+        },
+      );
     } else {
       toast.error("Invalid attendance option");
     }
   };
 
-  const displayValue: string = selectedOption ? options[selectedOption] : "➕";
+  console.log(
+    `${pupilId} SHOULD BE SHORT VALUE FOR ${selectedOption} / ${attendance?.value} - ${date.toISOString()}`,
+    options[selectedOption],
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -63,34 +111,47 @@ const Attendance = ({
     };
   }, []);
 
+  if (isLoadingAttendance || isPending) return <td>Loading...</td>;
+
   return (
-    <div
-      onBlur={() => setIsDropdownOpen(false)}
-      ref={containerRef}
-      className="min-w-fit"
-    >
-      <div
-        className={`cursor-pointer border-r-2 p-2 ${isDropdownOpen && "hidden"}`}
-        onClick={() => {
-          setIsDropdownOpen(true);
-        }}
-      >
-        {displayValue}
-      </div>
-      <select
-        value={selectedOption}
-        onChange={handleSelectChange}
-        onSelect={() => setIsDropdownOpen(true)}
-        className={`h-full w-full cursor-pointer ${!isDropdownOpen && "hidden"}`}
-      >
-        <option disabled selected></option>
-        {Object.entries(options).map(([full]) => (
-          <option key={full} value={full}>
-            {full}
-          </option>
-        ))}
-      </select>
-    </div>
+    <td key={classId + pupilId} className="border-l-2">
+      <span className="flex min-w-52 gap-1">
+        <div
+          onBlur={() => setIsDropdownOpen(false)}
+          ref={containerRef}
+          className="min-w-fit"
+        >
+          <div
+            className={`cursor-pointer border-r-2 p-2 ${isDropdownOpen && "hidden"}`}
+            onClick={() => {
+              setIsDropdownOpen(true);
+            }}
+          >
+            {options[selectedOption]}
+          </div>
+          <select
+            value={selectedOption}
+            onChange={handleSelectChange}
+            onSelect={() => setIsDropdownOpen(true)}
+            className={`h-full w-full cursor-pointer ${!isDropdownOpen && "hidden"}`}
+          >
+            <option disabled></option>
+            {Object.entries(options).map(([full]) => (
+              <option key={full} value={full}>
+                {full}
+              </option>
+            ))}
+          </select>
+        </div>
+        <textarea
+          className="h-fit w-full text-sm"
+          defaultValue="Lorem ipsum, dolor sit amet consectetur adipisicing elit. Qui
+    quibusdam dolorem veniam ducimus quo, voluptate ex nemo veritatis at
+    repellat cupiditate? Pariatur optio modi placeat, aliquid facere
+    blanditiis maxime quaerat?"
+        />
+      </span>
+    </td>
   );
 };
 
@@ -184,49 +245,6 @@ const InstrumentName = ({ instrumentId }: { instrumentId: string | null }) => {
   return <>{instrument?.name}</>;
 };
 
-const AttendanceInput = ({
-  classId,
-  pupilId,
-  date,
-}: {
-  classId: string;
-  pupilId: string;
-  date: Date;
-}) => {
-  // const { data, isLoading } = api.register.getAttendanceForLesson.useQuery({
-  //   lessonId: lesson.id,
-  //   pupilId,
-  // });
-
-  // if (isLoading) return <td>Loading...</td>;
-  // if (!data?.length) return <td>Unknown</td>;
-  // if (data.length > 1) {
-  //   toast.error(
-  //     `${data.length} attendance records found for this lesson. Please contact support, quoting the following: LESSON ID = ${lesson.id}. ATTENDANCE ID =  ${data[0]?.id}`,
-  //   );
-  // }
-  // const attendance = data[0];
-  // if (!attendance) return null;
-  return (
-    <td key={classId + pupilId} className="border-l-2">
-      <span className="flex min-w-52 gap-1">
-        <Attendance
-          classId={classId}
-          pupilId={pupilId}
-          lessonId="test"
-          date={date}
-        />
-        <div className="line-clamp-2 max-h-12 overflow-ellipsis text-sm">
-          Lorem ipsum, dolor sit amet consectetur adipisicing elit. Qui
-          quibusdam dolorem veniam ducimus quo, voluptate ex nemo veritatis at
-          repellat cupiditate? Pariatur optio modi placeat, aliquid facere
-          blanditiis maxime quaerat?
-        </div>
-      </span>
-    </td>
-  );
-};
-
 const ClassRows = ({
   classe,
   dates,
@@ -264,17 +282,9 @@ const PupilRow = ({
   classe: InferSelectModel<typeof classes>;
   dates: Date[];
 }) => {
-  const { data: lessons, isLoading } = api.register.getLessonsForClass.useQuery(
-    {
-      classId: classe.id,
-      after: dates[0]!,
-      before: dates[dates.length - 1]!,
-    },
-  );
-
   return (
     <tr
-      key={classe.id + pupil.id}
+      key={pupil.id + classe.id}
       className={`h-fit hover:bg-purple-400/30 ${pupil.isDroppedOut && "line-through"}`}
     >
       <td className="sticky left-0 whitespace-nowrap border-r border-gray-200 bg-purple-200 ">
@@ -301,11 +311,11 @@ const PupilRow = ({
       </td>
       {dates.map((date) => {
         return (
-          <AttendanceInput
+          <Attendance
             date={date}
             classId={classe.id}
             pupilId={pupil.id}
-            key={pupil.id + pupil.id}
+            key={pupil.id + date.toISOString()}
           />
         );
       })}

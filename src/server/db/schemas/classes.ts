@@ -16,6 +16,7 @@ import { books } from "./books";
 import { rooms } from "./rooms";
 import { teacher } from "./teachers";
 import { pupils } from "./pupils";
+import { randomUUID } from "crypto";
 
 // A class is the representation of the recurring event at a regular time and day.
 // A class has many lessons.
@@ -28,7 +29,7 @@ export const classes = createTable("classes", {
   day: varchar("day", { enum: days }).notNull(),
   isStarted: boolean("isStarted").notNull().default(false),
   maxPupils: integer("maxPupils").notNull(),
-  startDate: date("startDate", { mode: "string" }),
+  startDate: date("startDate"),
   instrumentId: varchar("instrumentId", { length: 255 }).references(
     () => instruments.id,
     {
@@ -78,10 +79,13 @@ export const classType = createTable("class_type", {
 
 // The single occurence of a class is a lesson. Attendance is related to a lesson, not a class.
 export const lessons = createTable("lessons", {
-  id: varchar("id", { length: 255 }).notNull().primaryKey(),
-  date: date("date", { mode: "date" }).notNull(),
-  startTime: time("startTime").notNull(),
-  lengthInMins: interval("lengthInMins", { fields: "minute" }).notNull(),
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(randomUUID),
+  date: date("date").notNull(),
+  startTime: time("startTime"),
+  lengthInMins: interval("lengthInMins", { fields: "minute" }),
   classId: varchar("classId", { length: 255 })
     .notNull()
     .references(() => classes.id, { onDelete: "cascade", onUpdate: "cascade" }),
