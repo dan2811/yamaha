@@ -1,5 +1,5 @@
 import type { InferSelectModel } from "drizzle-orm";
-import { getClassClashes } from "~/app/_utils/ClassClashes";
+import { getClassClashes } from "~/app/_utils/ClassHelpers";
 import { findEarliestClass, findLatestClass } from "~/app/_utils/ClassHelpers";
 import {
   parseDbTime,
@@ -7,14 +7,28 @@ import {
 } from "~/app/_utils/dateHelpers";
 import type { classes, lessons } from "~/server/db/schemas";
 import { api } from "~/trpc/server";
+import { generateTimeIntervals } from "./diaryHelpers";
+import Link from "next/link";
 
 const TimetableCard = async ({
   class: c,
   lesson,
+  currentTime,
 }: {
   class: InferSelectModel<typeof classes>;
   lesson?: InferSelectModel<typeof lessons>;
+  currentTime: string;
 }) => {
+  if (currentTime !== parseDbTime(c.startTime)) {
+    return (
+      <div className="h-full w-full border-x-2 border-b-2 border-black">
+        <Link href={`/admin/classes/${c.id}`} className="h-full w-full">
+          <div className="h-full w-full">⌄</div>
+        </Link>
+      </div>
+    );
+  }
+
   if (!lesson) {
     const instrument = await api.instrument.show({ id: c.instrumentId });
     const teacher = await api.teacher.show({ id: c.regularTeacherId });
@@ -28,63 +42,23 @@ const TimetableCard = async ({
         classLevelId: c.levelId,
       });
     }
+
     return (
-      <div className="overflow-clip">
-        <p>
-          {teacher.user?.name} {instrument?.name}
-        </p>
-        <p>
-          {classLevel?.name ?? ""} {classType?.name ?? ""}
-        </p>
+      <div
+        className={`h-full w-full overflow-clip border-black ${c.lengthInMins > 30 ? "border-l-2 border-r-2 border-t-2" : "border-2"}`}
+      >
+        <Link href={`/admin/classes/${c.id}`} className="h-full w-full">
+          <p className="h-full w-full">
+            {teacher.user?.name} {instrument?.name}
+          </p>
+          <p className="h-full w-full">
+            {classLevel?.name ?? ""} {classType?.name ?? ""}
+          </p>
+        </Link>
       </div>
     );
   }
   return <div></div>;
-};
-
-const generateTimeIntervals = (
-  startTime: string,
-  endTime: string,
-): string[] => {
-  console.log(
-    `generating times for diary starting with ${startTime} and ending with ${endTime}`,
-  );
-  const times: string[] = [];
-
-  const [startHour, startMinute] = startTime
-    .split(":")
-    .map((str) => parseInt(str, 10));
-  const [endHour, endMinute] = endTime
-    .split(":")
-    .map((str) => parseInt(str, 10));
-
-  if (
-    typeof startHour !== "number" ||
-    typeof startMinute !== "number" ||
-    typeof endHour !== "number" ||
-    typeof endMinute !== "number"
-  ) {
-    throw new Error("Invalid time format");
-  }
-
-  for (
-    let currentHour = startHour - 1, currentMinute = startMinute;
-    currentHour <= (endHour ?? 23) ||
-    (currentHour === endHour && currentMinute < (endMinute ?? 0));
-    currentHour++
-  ) {
-    console.log("Generated: ", currentHour, currentMinute);
-    const date = new Date(new Date().setHours(currentHour, currentMinute));
-    times.push(
-      date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
-    );
-    date.setMinutes(date.getMinutes() + 30);
-    times.push(
-      date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
-    );
-  }
-
-  return times;
 };
 
 const Diary = async ({ searchParams }: { searchParams?: { date: string } }) => {
@@ -154,9 +128,13 @@ const Diary = async ({ searchParams }: { searchParams?: { date: string } }) => {
                   return (
                     <td
                       key={classAtTime.id}
-                      className="border-2 border-black bg-gray-200 text-center"
+                      className="h-10 bg-gray-200 text-center"
                     >
-                      <TimetableCard class={classAtTime} lesson={lesson} />
+                      <TimetableCard
+                        class={classAtTime}
+                        lesson={lesson}
+                        currentTime={currentTime}
+                      />
                     </td>
                   );
                 }
@@ -166,7 +144,7 @@ const Diary = async ({ searchParams }: { searchParams?: { date: string } }) => {
                   return (
                     <td
                       key={classAtTime.id}
-                      className="h-full w-full border-2 border-black bg-red-200 text-center"
+                      className="h-full w-full animate-pulse bg-red-400 text-center "
                     >
                       <span className="pb-2 font-bold text-red-600">
                         CLASH!
@@ -177,6 +155,7 @@ const Diary = async ({ searchParams }: { searchParams?: { date: string } }) => {
                             <TimetableCard
                               class={c}
                               lesson={lessons.find((l) => l.classId === c.id)}
+                              currentTime={currentTime}
                             />
                           </div>
                         ))}

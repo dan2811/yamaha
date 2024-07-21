@@ -2,6 +2,7 @@
 import { randomUUID } from "crypto";
 import { db } from ".";
 import {
+  classLevel,
   classType,
   classes,
   classesToPupils,
@@ -403,6 +404,47 @@ const insertClassesToPupils = async ({
   ]);
 };
 
+const insertClassLevels = async () => {
+  await db.insert(classLevel).values([
+    {
+      name: "Debut",
+      description: "Debut level",
+    },
+    {
+      name: "Grade 1",
+      description: "Grade 1 level",
+    },
+    {
+      name: "Grade 2",
+      description: "Grade 2 level",
+    },
+    {
+      name: "Grade 3",
+      description: "Grade 3 level",
+    },
+    {
+      name: "Grade 4",
+      description: "Grade 4 level",
+    },
+    {
+      name: "Grade 5",
+      description: "Grade 5 level",
+    },
+    {
+      name: "Grade 6",
+      description: "Grade 6 level",
+    },
+    {
+      name: "Grade 7",
+      description: "Grade 7 level",
+    },
+    {
+      name: "Grade 8",
+      description: "Grade 8 level",
+    },
+  ]);
+};
+
 const main = async () => {
   await db.delete(lessons);
   await db.delete(rooms);
@@ -412,6 +454,8 @@ const main = async () => {
   await db.delete(pupils);
   await db.delete(classType);
   await db.delete(classes);
+  await db.delete(classesToPupils);
+  await db.delete(classLevel);
   const createdRooms = await insertRooms();
   const createdUsers = await insertUsers();
   const createdInstruments = await insertInstruments(createdRooms);
@@ -432,6 +476,7 @@ const main = async () => {
     createdClasses,
     createdPupils,
   });
+  const createdClassLevels = await insertClassLevels();
 
   // const createdLessons = await insertLessons({ createdClasses });
 

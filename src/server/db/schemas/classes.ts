@@ -1,6 +1,5 @@
 import {
   date,
-  interval,
   numeric,
   text,
   time,
@@ -69,7 +68,10 @@ export const classes = createTable("classes", {
 
 // eg. "Complete beginners", "Debut - working towards Debut grade", "DE1 - working on Drum Encounters 1"
 export const classLevel = createTable("class_level", {
-  id: varchar("id", { length: 255 }).notNull().primaryKey(),
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(randomUUID),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
 });
