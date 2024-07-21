@@ -56,6 +56,7 @@ const ShowNewClass = ({ params: { id } }: { params: { id: string } }) => {
               : "",
             Teacher: data?.user?.name,
             Instrument: data?.instrument?.name,
+            Room: data?.room?.name,
           }}
         />
         {isPupilsLoading ? (
@@ -71,14 +72,17 @@ const ShowNewClass = ({ params: { id } }: { params: { id: string } }) => {
                 </tr>
               </thead>
               <tbody>
-                {pupils?.pupils.map(({ pupilId }) => (
-                  <PupilRow
-                    pupilId={pupilId}
-                    key={pupilId}
-                    classId={id}
-                    refetchPupils={refetchPupils}
-                  />
-                ))}
+                {pupils?.map(
+                  ({ pupil }) =>
+                    pupil?.id && (
+                      <PupilRow
+                        pupilId={pupil.id}
+                        key={pupil.id}
+                        classId={id}
+                        refetchPupils={refetchPupils}
+                      />
+                    ),
+                )}
               </tbody>
             </table>
             <AddPupil classId={id} refetchPupils={refetchPupils} />

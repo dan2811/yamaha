@@ -1,15 +1,17 @@
 "use client";
+import { useRouter } from "next/navigation";
 import React, { type ChangeEventHandler, useState } from "react";
 import toast from "react-hot-toast";
 import AdminButton from "~/app/_components/admin/Button";
 import LoadingSpinner from "~/app/_components/admin/LoadingSpinner";
+import { SelectRoom } from "~/app/_components/admin/SelectRoom";
 import { SelectTeacher } from "~/app/_components/admin/SelectTeacher";
 import { type Day, days } from "~/server/types";
 import { api } from "~/trpc/react";
 
 interface FormData {
   startTime: string;
-  lengthInMins: string;
+  lengthInMins: number;
   day: Day;
   isStarted: boolean;
   maxPupils: number;
@@ -17,9 +19,11 @@ interface FormData {
   instrumentId: string;
   levelId: string;
   regularTeacherId: string;
+  roomId: string;
 }
 
 const CreateNewClass = () => {
+  const router = useRouter();
   const { data: instruments, status: instrumentsQueryStatus } =
     api.instrument.list.useQuery();
   const { mutateAsync } = api.classes.createNewClass.useMutation();
@@ -27,7 +31,7 @@ const CreateNewClass = () => {
   const [isStartDateUnknown, setIsStartDateUnknown] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     startTime: "16:00",
-    lengthInMins: "60",
+    lengthInMins: 60,
     day: days[0],
     isStarted: false,
     maxPupils: 8,
@@ -35,6 +39,7 @@ const CreateNewClass = () => {
     instrumentId: instruments ? instruments[0]!.id : "",
     levelId: "",
     regularTeacherId: "",
+    roomId: "",
   });
 
   const handleChange: ChangeEventHandler<
@@ -62,12 +67,19 @@ const CreateNewClass = () => {
     await mutateAsync(
       {
         ...formData,
-        lengthInMins: (parseInt(formData.lengthInMins) * 10).toString(),
+        lengthInMins: formData.lengthInMins,
       },
       {
         onError: (error) => {
           toast.error("Failed to create new class");
           console.error(error);
+        },
+        onSuccess: (newClass) => {
+          toast.success(`New class created`);
+          const route = newClass[0]?.id
+            ? `/admin/newClasses/${newClass[0].id}`
+            : "/admin/newClasses/list";
+          router.push(route);
         },
       },
     );
@@ -173,6 +185,7 @@ const CreateNewClass = () => {
         )}
         <SelectClassLevel handleChange={handleChange} />
         <SelectTeacher handleChange={handleChange} />
+        <SelectRoom handleChange={handleChange} />
         <AdminButton type="submit" className="col-span-2">
           Submit
         </AdminButton>
@@ -195,9 +208,11 @@ const validateFormData = (
   const result: ValidateFormDataResult = { isValid: false, errorMessages: [] };
   if ((formData.day as typeof formData.day & "") === "")
     result.errorMessages.push("Please choose a day.");
+  if (formData.roomId === "")
+    result.errorMessages.push("Please choose a room.");
   if (formData.startTime === "")
     result.errorMessages.push("Start time is required.");
-  if (parseInt(formData.lengthInMins) < 0)
+  if (formData.lengthInMins < 0)
     result.errorMessages.push("Length in minutes is too low.");
   if (formData.maxPupils < 2)
     result.errorMessages.push("Max pupils is too low.");
@@ -232,7 +247,7 @@ const SelectClassLevel = ({
     case "success":
       return (
         <>
-          <label>Level ID:</label>
+          <label>Level:</label>
           <select
             name="levelId"
             defaultValue="please-choose"

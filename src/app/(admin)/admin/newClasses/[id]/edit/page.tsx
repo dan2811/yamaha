@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import LoadingSpinner from "~/app/_components/admin/LoadingSpinner";
 import { type UpdateClassFormData, updateClass } from "../serverActions";
 import { useRouter } from "next/navigation";
+import { SelectRoom } from "~/app/_components/admin/SelectRoom";
 
 const EditNewClass = ({ params: { id } }: { params: { id: string } }) => {
   const { data, isLoading, isError, error, isSuccess } =
@@ -27,6 +28,7 @@ const EditNewClass = ({ params: { id } }: { params: { id: string } }) => {
     regularTeacherId: "",
     startTime: "",
     startDate: "",
+    roomId: "",
   });
 
   useEffect(() => {
@@ -37,6 +39,7 @@ const EditNewClass = ({ params: { id } }: { params: { id: string } }) => {
         regularTeacherId: data.teacher?.id ? data.teacher.id : "",
         startTime: data.classes.startTime,
         startDate: data.classes.startDate ?? "",
+        roomId: data.room?.id ?? "",
       });
     }
   }, [data, isSuccess, id]);
@@ -80,6 +83,7 @@ const EditNewClass = ({ params: { id } }: { params: { id: string } }) => {
               : "",
             Teacher: data?.user?.name,
             Instrument: data?.instrument?.name,
+            Room: data?.room?.name,
           }}
         />
         <form
@@ -144,6 +148,10 @@ const EditNewClass = ({ params: { id } }: { params: { id: string } }) => {
           <SelectTeacher
             handleChange={handleChange}
             initialValue={data?.teacher?.id}
+          />
+          <SelectRoom
+            handleChange={handleChange}
+            initialValue={data?.room?.id}
           />
           <AdminButton type="submit" className="w-fit place-self-center px-6">
             Save

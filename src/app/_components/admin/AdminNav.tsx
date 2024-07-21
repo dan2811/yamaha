@@ -44,6 +44,10 @@ export default function AdminNav() {
       path: `/admin/register/${new Date().getDay()}`,
     },
     {
+      name: "Diary",
+      path: `/admin/diary`,
+    },
+    {
       name: "Settings",
       path: "/admin/settings",
     },

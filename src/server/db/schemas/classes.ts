@@ -1,5 +1,4 @@
 import {
-  boolean,
   date,
   interval,
   numeric,
@@ -17,6 +16,7 @@ import { rooms } from "./rooms";
 import { teacher } from "./teachers";
 import { pupils } from "./pupils";
 import { randomUUID } from "crypto";
+import { type SQL, sql } from "drizzle-orm";
 
 // A class is the representation of the recurring event at a regular time and day.
 // A class has many lessons.
@@ -25,9 +25,14 @@ import { randomUUID } from "crypto";
 export const classes = createTable("classes", {
   id: varchar("id", { length: 255 }).notNull().primaryKey(),
   startTime: time("startTime").notNull(),
-  lengthInMins: interval("lengthInMins", { fields: "minute" }).notNull(),
+  lengthInMins: integer("lengthInMins").notNull(),
+  endTime: time("endTime")
+    .notNull()
+    .generatedAlwaysAs(
+      (): SQL =>
+        sql`${classes.startTime} + interval '1 minute' * ${classes.lengthInMins}`,
+    ),
   day: varchar("day", { enum: days }).notNull(),
-  isStarted: boolean("isStarted").notNull().default(false),
   maxPupils: integer("maxPupils").notNull(),
   startDate: date("startDate"),
   instrumentId: varchar("instrumentId", { length: 255 }).references(
@@ -62,7 +67,7 @@ export const classes = createTable("classes", {
   }),
 });
 
-// eg. "Complete beginners", "Debut - working towards Debut grade", "DE1 - working on Drum Encouters 1"
+// eg. "Complete beginners", "Debut - working towards Debut grade", "DE1 - working on Drum Encounters 1"
 export const classLevel = createTable("class_level", {
   id: varchar("id", { length: 255 }).notNull().primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
@@ -84,8 +89,14 @@ export const lessons = createTable("lessons", {
     .primaryKey()
     .$defaultFn(randomUUID),
   date: date("date").notNull(),
-  startTime: time("startTime"),
-  lengthInMins: interval("lengthInMins", { fields: "minute" }),
+  startTime: time("startTime").notNull(),
+  lengthInMins: integer("lengthInMins").notNull(),
+  endTime: time("endTime")
+    .notNull()
+    .generatedAlwaysAs(
+      (): SQL =>
+        sql`${lessons.startTime} + interval '1 minute' * ${lessons.lengthInMins}`,
+    ),
   classId: varchar("classId", { length: 255 })
     .notNull()
     .references(() => classes.id, { onDelete: "cascade", onUpdate: "cascade" }),

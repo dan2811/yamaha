@@ -7,7 +7,7 @@ const NewClassesListLayout = ({ children }: { children: ReactNode }) => {
     <div className="flex w-full justify-center">
       <div className="w-full max-w-3xl">
         <div className="flex justify-between p-2">
-          <h2 className="text-3xl font-bold">Tasters</h2>
+          <h2 className="text-3xl font-bold">New Classes</h2>
           <Link
             className="rounded-lg bg-purple-500 p-2 text-white"
             href={`/admin/newClasses/create`}

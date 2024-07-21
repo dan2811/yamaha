@@ -1,11 +1,13 @@
 import { z } from "zod";
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, gte, isNull, lte, or } from "drizzle-orm";
 import { createTRPCRouter, teacherProcedure } from "../trpc";
 import {
   classLevel,
   classes,
   classesToPupils,
   instruments,
+  pupils,
+  rooms,
   teacher,
   users,
 } from "~/server/db/schemas";
@@ -15,7 +17,21 @@ import { zodDays } from "~/server/types";
 import { randomUUID } from "crypto";
 
 export const classesRouter = createTRPCRouter({
+  showClassLevel: teacherProcedure
+    .input(z.object({ classLevelId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select()
+        .from(classLevel)
+        .where(eq(classLevel.id, input.classLevelId))
+        .limit(1);
+    }),
   listNewClasses: teacherProcedure.query(async ({ input, ctx }) => {
+    // includes classes that have started in the last 2 weeks
+    const weeksToShowNewClassesFor = 2;
+    const newClassDateThreshold = new Date(
+      new Date().setDate(new Date().getDate() - weeksToShowNewClassesFor * 7),
+    );
     const res = await ctx.db
       .select({
         id: classes.id,
@@ -30,7 +46,12 @@ export const classesRouter = createTRPCRouter({
         pupilsCount: count(classesToPupils.pupilId),
       })
       .from(classes)
-      .where(eq(classes.isStarted, false))
+      .where(
+        or(
+          gte(classes.startDate, newClassDateThreshold.toISOString()),
+          isNull(classes.startDate),
+        ),
+      )
       .leftJoin(classesToPupils, eq(classes.id, classesToPupils.classId))
       .groupBy(classes.id);
     return res;
@@ -46,6 +67,7 @@ export const classesRouter = createTRPCRouter({
         .leftJoin(users, eq(teacher.userId, users.id))
         .leftJoin(classesToPupils, eq(classes.id, classesToPupils.classId))
         .leftJoin(instruments, eq(classes.instrumentId, instruments.id))
+        .leftJoin(rooms, eq(classes.roomId, rooms.id))
         .limit(1);
       if (res.length === 0)
         throw new TRPCError({
@@ -63,13 +85,14 @@ export const classesRouter = createTRPCRouter({
     .input(
       z.object({
         startTime: z.string(),
-        lengthInMins: z.string(),
+        lengthInMins: z.number(),
         day: zodDays,
         maxPupils: z.number(),
         startDate: z.string(),
         instrumentId: z.string(),
         levelId: z.string(),
         regularTeacherId: z.string(),
+        roomId: z.string(),
       }),
     )
     .mutation(({ ctx, input }) => {
@@ -77,27 +100,21 @@ export const classesRouter = createTRPCRouter({
         .insert(classes)
         .values({
           ...input,
-          isStarted: false,
           id: randomUUID(),
           lengthInMins: input.lengthInMins,
           startDate: input.startDate === "" ? undefined : input.startDate,
         })
-        .execute();
+        .returning();
     }),
   listPupils: teacherProcedure
     .input(z.object({ classId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const res = await ctx.db
-        .select({
-          pupils: jsonAggBuildObject({
-            pupilId: classesToPupils.pupilId,
-          }),
-        })
-        .from(classes)
-        .leftJoin(classesToPupils, eq(classes.id, classesToPupils.classId))
-        .where(eq(classes.isStarted, false))
-        .groupBy(classes.id);
-      return res[0];
+      const result = await ctx.db
+        .select()
+        .from(classesToPupils)
+        .where(eq(classesToPupils.classId, input.classId))
+        .leftJoin(pupils, eq(classesToPupils.pupilId, pupils.id));
+      return result;
     }),
   removePupilFromClass: teacherProcedure
     .input(

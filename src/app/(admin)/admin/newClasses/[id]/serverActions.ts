@@ -64,6 +64,7 @@ export interface UpdateClassFormData {
   startDate: string;
   day: Day;
   regularTeacherId: string;
+  roomId: string;
 }
 
 export const updateClass = async (formData: UpdateClassFormData) => {
@@ -83,6 +84,7 @@ export const updateClass = async (formData: UpdateClassFormData) => {
         startTime: processedFormData.startTime,
         startDate: processedFormData.startDate,
         regularTeacherId: processedFormData.regularTeacherId,
+        roomId: processedFormData.roomId,
       })
       .where(eq(classes.id, formData.classId));
   } catch (e) {

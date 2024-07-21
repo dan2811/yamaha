@@ -2,7 +2,7 @@
 
 import type { InferSelectModel } from "drizzle-orm";
 import { useSearchParams } from "next/navigation";
-import React, { ChangeEvent, useEffect, useRef, useState } from "react";
+import React, { type ChangeEvent, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import {
   determineDate,
@@ -10,31 +10,34 @@ import {
   getYamahaMonthStartEnd,
   parseDbTime,
 } from "~/app/_utils/dateHelpers";
-import type { attendance, classes, lessons, pupils } from "~/server/db/schemas";
-import { AttendanceValues, attendanceValues, zodDays } from "~/server/types";
+import { useDebounce } from "~/app/_utils/debounce";
+import type { classes, pupils } from "~/server/db/schemas";
+import { type AttendanceValues, zodDays } from "~/server/types";
 import { api } from "~/trpc/react";
 
 const Attendance = ({
   pupilId,
-  classId,
+  classe,
   date,
 }: {
   pupilId: string;
-  classId: string;
+  classe: InferSelectModel<typeof classes>;
   date: Date;
 }) => {
-  console.log(date.toISOString(), date.toLocaleDateString());
   const {
     data: attendance,
     isLoading: isLoadingAttendance,
     fetchStatus,
   } = api.register.getAttendanceForLesson.useQuery({
-    classId,
+    classId: classe.id,
     date,
     pupilId,
   });
 
-  const { mutateAsync, isPending } = api.register.markAttendance.useMutation();
+  const { mutateAsync, isPending, reset } =
+    api.register.markAttendance.useMutation();
+
+  const [confirmedEditHistory, setConfirmedEditHistory] = useState(false);
 
   const options = {
     Attended: "A",
@@ -50,17 +53,84 @@ const Attendance = ({
     useState<keyof typeof options>("Reset");
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [notes, setNotes] = useState(attendance?.notes ?? "");
 
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log("useEffect", fetchStatus);
     setSelectedOption(attendance?.value ?? "Reset");
-  }, [fetchStatus]);
+    setNotes(attendance?.notes ?? "");
+  }, [fetchStatus, attendance?.notes, attendance?.value]);
+
+  const autoSave = async () => {
+    const loadingToast = toast.loading("Saving....");
+    await mutateAsync(
+      {
+        classId: classe.id,
+        pupilId,
+        date,
+        value:
+          selectedOption === "Reset" || selectedOption === undefined
+            ? null
+            : selectedOption,
+        notes,
+      },
+      {
+        onError: (e) => {
+          toast.dismiss(loadingToast);
+          toast.error(`Could not save notes! ${e.message}`);
+        },
+        onSuccess: () => {
+          toast.dismiss(loadingToast);
+          toast.success("Notes saved");
+        },
+      },
+    );
+  };
+
+  const debouncedAutoSave = useDebounce(autoSave);
+
+  const handleTextAreaChange = async (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
+    if (!confirmedEditHistory) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const inputDate = new Date(date);
+      inputDate.setHours(0, 0, 0, 0);
+      if (inputDate < today) {
+        const confirmed = window.confirm(
+          "You're editing attendance data that is in the past. Are you sure you want to do this?",
+        );
+        if (!confirmed) {
+          return;
+        }
+        setConfirmedEditHistory(true);
+      }
+    }
+    setNotes(e.target.value);
+    debouncedAutoSave();
+  };
 
   const handleSelectChange = async (event: ChangeEvent<HTMLSelectElement>) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const inputDate = new Date(date);
+    inputDate.setHours(0, 0, 0, 0);
+    if (inputDate < today) {
+      const confirmed = window.confirm(
+        "You're editing attendance data that is in the past. Are you sure you want to do this?",
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
     const prevSelectedOption = selectedOption;
     if (event.target.value in options) {
+      const loadingToast = toast.loading("Saving....");
       setSelectedOption(event.target.value as keyof typeof options);
 
       const value: AttendanceValues | null =
@@ -70,30 +140,28 @@ const Attendance = ({
 
       await mutateAsync(
         {
-          classId,
+          classId: classe.id,
           pupilId,
           date,
           value,
+          notes,
         },
         {
           onError: (e) => {
+            toast.dismiss(loadingToast);
             toast.error(e.message);
             setSelectedOption(prevSelectedOption);
           },
           onSuccess: () => {
+            toast.dismiss(loadingToast);
             toast.success("Attendance updated");
           },
         },
       );
     } else {
-      toast.error("Invalid attendance option");
+      toast.error("Invalid attendance option. Stop trying to hack about m8.");
     }
   };
-
-  console.log(
-    `${pupilId} SHOULD BE SHORT VALUE FOR ${selectedOption} / ${attendance?.value} - ${date.toISOString()}`,
-    options[selectedOption],
-  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -111,29 +179,52 @@ const Attendance = ({
     };
   }, []);
 
-  if (isLoadingAttendance || isPending) return <td>Loading...</td>;
+  if (isLoadingAttendance || !classe || !date || !pupilId)
+    return (
+      <td className="h-full min-h-full border-l-2">
+        <span className="flex h-full w-full animate-pulse gap-1">
+          <div className="min-h-full w-fit">
+            <div className="flex h-full w-12 cursor-pointer border-r-2">
+              <p className="flex h-full w-full items-center justify-center">
+                ➕
+              </p>
+            </div>
+          </div>
+          <textarea
+            disabled
+            className="h-full w-full bg-purple-300 px-1 text-sm focus:bg-white"
+          ></textarea>
+        </span>
+      </td>
+    );
+
+  if (new Date(classe.startDate!).getTime() > date.getTime()) {
+    return <td></td>;
+  }
 
   return (
-    <td key={classId + pupilId} className="border-l-2">
+    <td key={classe.id + pupilId} className="border-l-2">
       <span className="flex min-w-52 gap-1">
         <div
           onBlur={() => setIsDropdownOpen(false)}
           ref={containerRef}
-          className="min-w-fit"
+          className="w-fit"
         >
           <div
-            className={`cursor-pointer border-r-2 p-2 ${isDropdownOpen && "hidden"}`}
+            className={`h-full w-12 cursor-pointer border-r-2 ${isDropdownOpen && "hidden"} flex`}
             onClick={() => {
               setIsDropdownOpen(true);
             }}
           >
-            {options[selectedOption]}
+            <p className="flex w-full items-center justify-center">
+              {options[selectedOption]}
+            </p>
           </div>
           <select
             value={selectedOption}
             onChange={handleSelectChange}
             onSelect={() => setIsDropdownOpen(true)}
-            className={`h-full w-full cursor-pointer ${!isDropdownOpen && "hidden"}`}
+            className={`h-full w-fit cursor-pointer ${!isDropdownOpen && "hidden"} text-sm`}
           >
             <option disabled></option>
             {Object.entries(options).map(([full]) => (
@@ -144,11 +235,9 @@ const Attendance = ({
           </select>
         </div>
         <textarea
-          className="h-fit w-full text-sm"
-          defaultValue="Lorem ipsum, dolor sit amet consectetur adipisicing elit. Qui
-    quibusdam dolorem veniam ducimus quo, voluptate ex nemo veritatis at
-    repellat cupiditate? Pariatur optio modi placeat, aliquid facere
-    blanditiis maxime quaerat?"
+          className="h-fit w-full bg-purple-300 px-1 text-sm focus:bg-white"
+          value={notes}
+          onChange={handleTextAreaChange}
         />
       </span>
     </td>
@@ -168,7 +257,6 @@ const Page = ({ params: { day } }: { params: { day: string } }) => {
   const endDate = searchParams.get("endDate") ?? defaultEndDate;
   const { data: classes, isLoading } = api.register.getClassesForDay.useQuery({
     day: getDayNameFromInteger(parseInt(day)),
-    startDate: new Date(startDate),
     endDate: new Date(endDate),
   });
 
@@ -232,12 +320,12 @@ const Page = ({ params: { day } }: { params: { day: string } }) => {
 const TeacherName = ({ teacherId }: { teacherId: string | null }) => {
   if (!teacherId) return <>Unknown teacher</>;
   const { data: teacher } = api.teacher.show.useQuery({ id: teacherId });
-  if (!teacher) return <>Unknown teacher</>;
+  if (!teacher) return <>Unknown</>;
   return <>{teacher.user?.name}</>;
 };
 
 const InstrumentName = ({ instrumentId }: { instrumentId: string | null }) => {
-  if (!instrumentId) return <>Unknown instrument</>;
+  if (!instrumentId) return <>Unknown</>;
   const { data: instrument } = api.instrument.show.useQuery({
     id: instrumentId,
   });
@@ -285,35 +373,35 @@ const PupilRow = ({
   return (
     <tr
       key={pupil.id + classe.id}
-      className={`h-fit hover:bg-purple-400/30 ${pupil.isDroppedOut && "line-through"}`}
+      className={`h-fit${pupil.isDroppedOut && "line-through"} group bg-purple-200`}
     >
-      <td className="sticky left-0 whitespace-nowrap border-r border-gray-200 bg-purple-200 ">
+      <td className="sticky left-0 whitespace-nowrap border-r border-gray-200 bg-purple-200 group-hover:bg-purple-300">
         <p className="p-1">{parseDbTime(classe.startTime)}</p>
       </td>
-      <td className="sticky left-12 whitespace-nowrap border-r border-gray-200 bg-purple-200">
+      <td className="sticky left-12 whitespace-nowrap border-r border-gray-200 bg-purple-200 group-hover:bg-purple-300">
         <p className="p-1 text-left">
           <TeacherName teacherId={classe.regularTeacherId} />
         </p>
       </td>
-      <td className="sticky left-32 whitespace-nowrap border-r border-gray-200 bg-purple-200">
+      <td className="sticky left-32 whitespace-nowrap border-r border-gray-200 bg-purple-200 group-hover:bg-purple-300 ">
         <p className="p-1">
           <InstrumentName instrumentId={classe.instrumentId} />
         </p>
       </td>
-      <td className="sticky left-48 whitespace-nowrap border-r border-gray-200 bg-purple-200">
+      <td className="sticky left-48 whitespace-nowrap border-r border-gray-200 bg-purple-200 group-hover:bg-purple-300">
         <ClassTypeName typeId={classe.typeId} />
       </td>
-      <td className="sticky left-64 whitespace-nowrap border-r border-gray-200 bg-purple-200">
+      <td className="sticky left-64 whitespace-nowrap border-r border-gray-200 bg-purple-200 group-hover:bg-purple-300">
         <p className=" max-w-32 overflow-clip p-1">{pupil.fName}</p>
       </td>
-      <td className="sticky left-80 whitespace-nowrap border-r border-gray-200 bg-purple-200">
+      <td className="sticky left-80 whitespace-nowrap border-r border-gray-200 bg-purple-200 group-hover:bg-purple-300">
         <p className="max-w-32 overflow-clip p-1">{pupil.lName}</p>
       </td>
       {dates.map((date) => {
         return (
           <Attendance
             date={date}
-            classId={classe.id}
+            classe={classe}
             pupilId={pupil.id}
             key={pupil.id + date.toISOString()}
           />
@@ -324,7 +412,7 @@ const PupilRow = ({
 };
 
 const ClassTypeName = ({ typeId }: { typeId: string | null }) => {
-  if (!typeId) return <p>Unknown type</p>;
+  if (!typeId) return <p>Unknown</p>;
   const { data: type } = api.classType.show.useQuery({ classTypeId: typeId });
   if (!type) return <p>Unknown type</p>;
   return <p>{type.name}</p>;

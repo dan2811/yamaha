@@ -341,7 +341,7 @@ const insertClasses = async ({
       {
         id: randomUUID(),
         day: "Monday",
-        lengthInMins: "60",
+        lengthInMins: 60,
         startTime: "16:00",
         maxPupils: 8,
         instrumentId: createdInstruments.find(

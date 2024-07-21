@@ -1,3 +1,5 @@
+import { Day } from "~/server/types";
+
 export const calculateAge = (dob: Date) => {
   const today = new Date();
   const birthDate = new Date(dob);
@@ -35,7 +37,7 @@ export const parseDbTime = (time: string) => {
 };
 
 export const transformNumberToWeekDay = (day: number) => {
-  const days = [
+  const days: Day[] = [
     "Sunday",
     "Monday",
     "Tuesday",

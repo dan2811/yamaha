@@ -8,16 +8,7 @@ import {
   lessons,
   pupils,
 } from "~/server/db/schemas";
-import {
-  and,
-  eq,
-  getTableColumns,
-  gte,
-  InferInsertModel,
-  lte,
-} from "drizzle-orm";
-import { jsonAggBuildObject } from "~/server/db/drizzle-helpers";
-import { randomUUID } from "crypto";
+import { and, eq, getTableColumns, gte, lte } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const registerRouter = createTRPCRouter({
@@ -25,20 +16,21 @@ export const registerRouter = createTRPCRouter({
     .input(
       z.object({
         day: zodDays,
-        startDate: z.date(),
         endDate: z.date(),
       }),
     )
     .query(async ({ input, ctx }) => {
       const result = ctx.db
-        .select({
-          ...getTableColumns(classes),
-          lessons: jsonAggBuildObject(getTableColumns(lessons)),
-        })
+        .select()
         .from(classes)
-        .leftJoin(lessons, eq(classes.id, lessons.classId))
-        .where(eq(classes.day, input.day))
-        .groupBy(classes.id);
+        .where(
+          and(
+            eq(classes.day, input.day),
+            lte(classes.startDate, input.endDate.toISOString()),
+          ),
+        )
+        .groupBy(classes.id)
+        .orderBy(classes.startTime, classes.id);
 
       return result;
     }),
@@ -101,6 +93,7 @@ export const registerRouter = createTRPCRouter({
         date: z.date(),
         pupilId: z.string(),
         value: zodAttendanceValues.nullable(),
+        notes: z.string().max(252, "Notes must be less than 250 characters"),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -114,6 +107,10 @@ export const registerRouter = createTRPCRouter({
           ),
         )
         .limit(1);
+
+      console.log(
+        lesson ? "Found existing lesson" : "No existing lesson found",
+      );
 
       if (!lesson) {
         try {
@@ -154,12 +151,34 @@ export const registerRouter = createTRPCRouter({
               message: "Could not create lesson",
             });
           }
+          const [existingAttendanceRecord] = await ctx.db
+            .select()
+            .from(attendance)
+            .where(
+              and(
+                eq(attendance.lessonId, lesson.id),
+                eq(attendance.pupilId, input.pupilId),
+              ),
+            );
 
-          await ctx.db.insert(attendance).values({
-            lessonId: lesson.id,
-            pupilId: input.pupilId,
-            value: input.value,
-          });
+          if (!existingAttendanceRecord) {
+            console.log("No existing attendance record found");
+            await ctx.db.insert(attendance).values({
+              lessonId: lesson.id,
+              pupilId: input.pupilId,
+              value: input.value,
+              notes: input.notes,
+            });
+          } else {
+            console.log("Found existing attendance record");
+            await ctx.db
+              .update(attendance)
+              .set({
+                notes: input.notes,
+                value: input.value,
+              })
+              .where(eq(attendance.id, existingAttendanceRecord.id));
+          }
           return;
         } catch (error) {
           console.error(error);
@@ -170,11 +189,34 @@ export const registerRouter = createTRPCRouter({
         }
       }
 
-      await ctx.db.insert(attendance).values({
-        lessonId: lesson.id,
-        pupilId: input.pupilId,
-        value: input.value,
-      });
+      const [existingAttendanceRecord] = await ctx.db
+        .select()
+        .from(attendance)
+        .where(
+          and(
+            eq(attendance.lessonId, lesson.id),
+            eq(attendance.pupilId, input.pupilId),
+          ),
+        );
+
+      if (!existingAttendanceRecord) {
+        console.log("No existing attendance record found");
+        await ctx.db.insert(attendance).values({
+          lessonId: lesson.id,
+          pupilId: input.pupilId,
+          value: input.value,
+          notes: input.notes,
+        });
+      } else {
+        console.log("Found existing attendance record");
+        await ctx.db
+          .update(attendance)
+          .set({
+            notes: input.notes,
+            value: input.value,
+          })
+          .where(eq(attendance.id, existingAttendanceRecord.id));
+      }
     }),
   getLessonForClass: teacherProcedure
     .input(z.object({ classId: z.string(), date: z.date() }))
