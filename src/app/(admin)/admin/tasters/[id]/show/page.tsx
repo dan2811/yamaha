@@ -6,13 +6,18 @@ import { calculateAge } from "~/app/_utils/dateHelpers";
 import { InfoCard } from "~/app/_components/admin/InfoCard";
 
 const TasterShow = ({ params }: { params: { id: string } }) => {
-  const { data, isLoading, isError, error } = api.taster.show.useQuery({
+  const {
+    data: taster,
+    isLoading,
+    isError,
+    error,
+  } = api.taster.show.useQuery({
     id: params.id,
   });
 
   if (isLoading) return <p>Loading...</p>;
-  if (!data ?? !data?.length ?? !data[0]) throw new Error("No data found");
-  const taster = data[0];
+  if (!taster) throw new Error("No data found");
+
   return (
     <div className="h-full w-full p-2">
       <span className="flex justify-between">
@@ -23,31 +28,29 @@ const TasterShow = ({ params }: { params: { id: string } }) => {
       </span>
       {isLoading && <p>Loading...</p>}
       {isError && <p>{error.message}</p>}
-      {data?.length && (
-        <article className="grid grid-cols-1 gap-6 p-2 sm:grid-cols-2">
-          <InfoCard
-            title="Student"
-            info={{
-              "First Name": taster.taster_enquiry.studentFirstName,
-              "Middle Name(s)": taster.taster_enquiry.studentMiddleNames ?? "",
-              "Last Name": taster.taster_enquiry.studentLastName,
-              "Date of Birth": `${new Date(
-                taster.taster_enquiry.dob,
-              ).toLocaleDateString()} (${calculateAge(new Date(taster.taster_enquiry.dob))} years old)`,
-              Phone: taster?.taster_enquiry.phone,
-              Email: taster?.taster_enquiry.email,
-              "Notes from customer": taster?.taster_enquiry.notes,
-              "Internal Notes": taster?.taster_enquiry.internalNotes,
-            }}
-          />
-          <InfoCard
-            title="Lesson"
-            info={{
-              Instrument: taster.instrument?.name,
-            }}
-          />
-        </article>
-      )}
+      <article className="grid grid-cols-1 gap-6 p-2 sm:grid-cols-2">
+        <InfoCard
+          title="Student"
+          info={{
+            "First Name": taster.taster_enquiry.studentFirstName,
+            "Middle Name(s)": taster.taster_enquiry.studentMiddleNames ?? "",
+            "Last Name": taster.taster_enquiry.studentLastName,
+            "Date of Birth": `${new Date(
+              taster.taster_enquiry.dob,
+            ).toLocaleDateString()} (${calculateAge(new Date(taster.taster_enquiry.dob))} years old)`,
+            Phone: taster?.taster_enquiry.phone,
+            Email: taster?.taster_enquiry.email,
+            "Notes from customer": taster?.taster_enquiry.notes,
+            "Internal Notes": taster?.taster_enquiry.internalNotes,
+          }}
+        />
+        <InfoCard
+          title="Lesson"
+          info={{
+            Instrument: taster.instrument?.name,
+          }}
+        />
+      </article>
     </div>
   );
 };

@@ -58,10 +58,12 @@ const Teachers = () => {
                         Object.values(el).some((el) => el !== null),
                       )
                         ? teacher.workingHours
-                            .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
+                            .sort((a, b) => {
+                              return days.indexOf(a.day) - days.indexOf(b.day);
+                            })
                             .map((workingHour, index) => (
                               <span key={index}>
-                                {days[workingHour.dayOfWeek]}:{" "}
+                                {workingHour.day}:{" "}
                                 {parseDbTime(workingHour.startTime)} -{" "}
                                 {parseDbTime(workingHour.endTime)}
                               </span>

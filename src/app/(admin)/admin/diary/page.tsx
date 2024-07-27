@@ -49,10 +49,8 @@ const TimetableCard = async ({
       >
         <Link href={`/admin/classes/${c.id}`} className="h-full w-full">
           <p className="h-full w-full">
-            {teacher.user?.name} {instrument?.name}
-          </p>
-          <p className="h-full w-full">
-            {classLevel?.name ?? ""} {classType?.name ?? ""}
+            {teacher.user?.name} {instrument?.name} - {classLevel?.name ?? ""}{" "}
+            {classType?.name ?? ""}
           </p>
         </Link>
       </div>

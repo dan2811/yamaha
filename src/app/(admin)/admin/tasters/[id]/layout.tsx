@@ -19,11 +19,12 @@ export default function Layout({
   if (isError) throw new Error(error.message);
   const path = usePathname();
 
-  const tabs = ["show", "edit"];
-
   let currentTab;
 
   switch (true) {
+    case path.includes("lesson"):
+      currentTab = "lesson";
+      break;
     case path.includes("show"):
       currentTab = "show";
       break;
@@ -36,12 +37,11 @@ export default function Layout({
   }
 
   if (isLoading) return <p>Loading...</p>;
-  if (!data) return <p>Loading...</p>;
-  if (!data[0]) return <p>Not found</p>;
+  if (!data) return <p>Not found</p>;
 
   const {
     taster_enquiry: { studentFirstName, studentLastName, status },
-  } = data[0];
+  } = data;
 
   return (
     <div className="flex w-full flex-col gap-x-2">
@@ -54,9 +54,26 @@ export default function Layout({
         </div>
       )}
       <nav className="flex w-full gap-2">
+        {!data.taster_enquiry.lessonId && (
+          <Link
+            href={
+              path.includes("show") ||
+              path.includes("edit") ||
+              path.includes("lesson")
+                ? "lesson"
+                : `${params.id}/lesson/`
+            }
+            className={`rounded-t-lg p-4 ${currentTab === "lesson" ? "bg-purple-600/10" : ""}`}
+          >
+            <AdminButton>📅 Book</AdminButton>
+          </Link>
+        )}
+
         <Link
           href={
-            path.includes("show") || path.includes("edit")
+            path.includes("show") ||
+            path.includes("edit") ||
+            path.includes("lesson")
               ? "show"
               : `${params.id}/show/`
           }
@@ -66,7 +83,9 @@ export default function Layout({
         </Link>
         <Link
           href={
-            path.includes("show") || path.includes("edit")
+            path.includes("show") ||
+            path.includes("edit") ||
+            path.includes("lesson")
               ? "edit"
               : `${params.id}/edit/`
           }

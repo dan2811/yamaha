@@ -46,6 +46,13 @@ const CreateNewClass = () => {
     HTMLInputElement | HTMLSelectElement
   > = (e) => {
     const { name, value, type, checked } = e.target as HTMLInputElement;
+    if (name === "lengthInMins" || name === "maxPupils") {
+      setFormData((prevState) => ({
+        ...prevState,
+        [name]: parseInt(value, 10),
+      }));
+      return;
+    }
     setFormData((prevState) => ({
       ...prevState,
       [name]: type === "checkbox" ? checked : value,

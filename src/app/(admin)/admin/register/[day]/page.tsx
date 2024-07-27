@@ -63,7 +63,7 @@ const Attendance = ({
   }, [fetchStatus, attendance?.notes, attendance?.value]);
 
   const autoSave = async () => {
-    const loadingToast = toast.loading("Saving....");
+    const loadingToast = toast.loading("Saving...");
     await mutateAsync(
       {
         classId: classe.id,
@@ -130,7 +130,7 @@ const Attendance = ({
 
     const prevSelectedOption = selectedOption;
     if (event.target.value in options) {
-      const loadingToast = toast.loading("Saving....");
+      const loadingToast = toast.loading("Saving...");
       setSelectedOption(event.target.value as keyof typeof options);
 
       const value: AttendanceValues | null =

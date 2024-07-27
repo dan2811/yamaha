@@ -148,4 +148,13 @@ export const classesRouter = createTRPCRouter({
         });
       }
     }),
+  show: teacherProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select()
+        .from(classes)
+        .where(eq(classes.id, input.id))
+        .limit(1);
+    }),
 });

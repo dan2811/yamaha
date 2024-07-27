@@ -21,9 +21,7 @@ const EditTaster = ({ params }: { params: { id: string } }) => {
   const inputClassNames =
     "p-2 rounded-lg shadow-md w-full disabled:bg-gray-100";
   if (isLoading) return <p>Loading...</p>;
-
-  if (!data) return <p>Loading...</p>;
-  if (!data[0] && !isLoading) return <p>Not found</p>;
+  if (!data) return <p>Not found</p>;
   return (
     <form
       className="grid grid-cols-1 gap-6 rounded p-4 sm:grid-cols-2"
@@ -59,7 +57,7 @@ const EditTaster = ({ params }: { params: { id: string } }) => {
           <legend>Status</legend>
           <select
             name="status"
-            defaultValue={data[0]?.taster_enquiry.status}
+            defaultValue={data.taster_enquiry.status}
             className={`${inputClassNames}`}
             disabled={status === "pending"}
           >
@@ -78,7 +76,7 @@ const EditTaster = ({ params }: { params: { id: string } }) => {
           type="text"
           name="studentFirstName"
           disabled={status === "pending"}
-          defaultValue={data[0]?.taster_enquiry.studentFirstName}
+          defaultValue={data.taster_enquiry.studentFirstName}
           required
         />
         <label>Middle Name(s)</label>
@@ -87,7 +85,7 @@ const EditTaster = ({ params }: { params: { id: string } }) => {
           type="text"
           name="studentMiddleNames"
           disabled={status === "pending"}
-          defaultValue={data[0]?.taster_enquiry.studentMiddleNames ?? ""}
+          defaultValue={data.taster_enquiry.studentMiddleNames ?? ""}
           required
         />
         <label>Last Name</label>
@@ -96,7 +94,7 @@ const EditTaster = ({ params }: { params: { id: string } }) => {
           type="text"
           name="studentLastName"
           disabled={status === "pending"}
-          defaultValue={data[0]?.taster_enquiry.studentLastName}
+          defaultValue={data.taster_enquiry.studentLastName}
           required
         />
         <label>Date of Birth</label>
@@ -106,8 +104,8 @@ const EditTaster = ({ params }: { params: { id: string } }) => {
           name="dob"
           disabled={status === "pending"}
           defaultValue={
-            data[0]?.taster_enquiry.dob &&
-            new Date(data[0]?.taster_enquiry.dob).toISOString().split("T")[0]
+            data.taster_enquiry.dob &&
+            new Date(data.taster_enquiry.dob).toISOString().split("T")[0]
           }
         />
         <label>Phone</label>
@@ -116,7 +114,7 @@ const EditTaster = ({ params }: { params: { id: string } }) => {
           type="text"
           name="phone"
           disabled={status === "pending"}
-          defaultValue={data[0]?.taster_enquiry.phone}
+          defaultValue={data.taster_enquiry.phone}
           required
         />
         <label>Email</label>
@@ -125,7 +123,7 @@ const EditTaster = ({ params }: { params: { id: string } }) => {
           type="email"
           name="email"
           disabled={status === "pending"}
-          defaultValue={data[0]?.taster_enquiry.email}
+          defaultValue={data.taster_enquiry.email}
           required
         />
       </fieldset>
@@ -135,14 +133,14 @@ const EditTaster = ({ params }: { params: { id: string } }) => {
           className={`${inputClassNames} h-full`}
           name="notes"
           disabled={status === "pending"}
-          defaultValue={data[0]?.taster_enquiry.notes ?? ""}
+          defaultValue={data.taster_enquiry.notes ?? ""}
         />
         <label>Internal Notes</label>
         <textarea
           className={`${inputClassNames} h-full`}
           name="internalNotes"
           disabled={status === "pending"}
-          defaultValue={data[0]?.taster_enquiry.internalNotes ?? ""}
+          defaultValue={data.taster_enquiry.internalNotes ?? ""}
         />
       </fieldset>
       <fieldset className="flex flex-col gap-2">
@@ -154,7 +152,7 @@ const EditTaster = ({ params }: { params: { id: string } }) => {
         ) : (
           <select
             name="instrumentId"
-            defaultValue={data[0]?.instrument?.name}
+            defaultValue={data.instrument?.name}
             className={`${inputClassNames}`}
             disabled={status === "pending"}
           >

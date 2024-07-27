@@ -1,15 +1,15 @@
 "use client";
-import React, { type ReactNode } from "react";
+import React, { useState, type ReactNode } from "react";
 import EditInstrumentsModal from "./AddInstrumentToTeacherModal";
 import AdminButton from "~/app/_components/admin/Button";
 import InstrumentPill from "~/app/_components/admin/InstrumentPill";
 import { api } from "~/trpc/react";
-import EditWorkingHoursModal from "./AddWorkingHoursToTeacherModal";
-import { Day, days } from "~/server/types";
+import { type Day, days } from "~/server/types";
 import {
   parseDbTime,
   transformNumberToWeekDay,
 } from "~/app/_utils/dateHelpers";
+import WorkingHoursCard from "./WorkingHoursCard";
 
 const EditTeacher = ({
   params: { id },
@@ -26,15 +26,15 @@ const EditTeacher = ({
     refetch: refetchInstruments,
   } = api.instrument.list.useQuery();
 
-  // const { data: allWorkingHours, isLoading: workingHoursIsLoading } =
-  //   api.teacher.getWorkingHours.useQuery({
-  //     teacherId: id,
-  //   });
+  const {
+    data: allWorkingHours,
+    isLoading: workingHoursIsLoading,
+    refetch,
+  } = api.teacher.getWorkingHours.useQuery({
+    teacherId: id,
+  });
 
-  const [isEditInstrumentsOpen, setIsEditInstrumentsOpen] =
-    React.useState(false);
-
-  // const [selectedDay, setSelectedDay] = React.useState<Day | undefined>();
+  const [isEditInstrumentsOpen, setIsEditInstrumentsOpen] = useState(false);
 
   if (!teacher) {
     return <div>Teacher not found</div>;
@@ -65,40 +65,20 @@ const EditTeacher = ({
           </AdminButton>
         </div>
       </div>
-      {/* <div>
+      <div>
         <p className="font-light">Working days</p>
         <div className="flex flex-wrap gap-2">
-          {days.map((day) => {
-            return (
-              <div
-                key={day + id}
-                className="flex w-32 flex-col gap-2 border-2 border-purple-300 p-2"
-              >
-                <p>{day}</p>
-                {allWorkingHours
-                  ?.filter(
-                    (shift) =>
-                      transformNumberToWeekDay(shift.dayOfWeek) === day,
-                  )
-                  ?.map(({ id, startTime, endTime }) => (
-                    <p key={id}>
-                      {parseDbTime(startTime)} - {parseDbTime(endTime)}
-                    </p>
-                  ))}
-                <AdminButton onClick={() => setSelectedDay(day)}>
-                  ✏️ Edit
-                </AdminButton>
-              </div>
-            );
-          })}
-        </div> 
-      </div> */}
-      {/* <EditWorkingHoursModal
-        day={selectedDay}
-        teacherId={id}
-        setIsOpen={setSelectedDay}
-        allWorkingHours={allWorkingHours}
-      /> */}
+          {days.map((day) => (
+            <WorkingHoursCard
+              key={day + id + teacher.id}
+              hours={allWorkingHours?.filter((wh) => wh.day === day)[0]}
+              day={day}
+              teacherId={id}
+              refetch={refetch}
+            />
+          ))}
+        </div>
+      </div>
       <EditInstrumentsModal
         refetchInstruments={refetchInstruments}
         allInstrumentsIsLoading={allInstrumentsIsLoading}

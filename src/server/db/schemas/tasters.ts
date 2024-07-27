@@ -24,7 +24,7 @@ export const tasterEnquiry = createTable("taster_enquiry", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
+  lessonId: varchar("lessonId", { length: 255 }),
 });
-
 
 export const insertTasterEnquiryZodSchema = createInsertSchema(tasterEnquiry);

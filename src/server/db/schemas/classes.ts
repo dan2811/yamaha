@@ -6,6 +6,7 @@ import {
   varchar,
   primaryKey,
   integer,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { createTable } from "../mainSchema";
 import { instruments } from "./instruments";
@@ -93,6 +94,9 @@ export const lessons = createTable("lessons", {
   date: date("date").notNull(),
   startTime: time("startTime").notNull(),
   lengthInMins: integer("lengthInMins").notNull(),
+  weCancelled: boolean("weCancelled")
+    .notNull()
+    .$default(() => false),
   endTime: time("endTime")
     .notNull()
     .generatedAlwaysAs(

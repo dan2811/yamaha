@@ -4,9 +4,13 @@ import { createTRPCRouter, teacherProcedure } from "../trpc";
 import {
   insertTasterEnquiryZodSchema,
   instruments,
+  instrumentsToTeachers,
   tasterEnquiry,
+  teacher,
+  workingHours,
 } from "~/server/db/schemas";
 import { randomUUID } from "crypto";
+import { jsonAggBuildObject } from "~/server/db/drizzle-helpers";
 
 export const tasterRouter = createTRPCRouter({
   create: teacherProcedure
@@ -89,7 +93,7 @@ export const tasterRouter = createTRPCRouter({
         .where(eq(tasterEnquiry.id, id))
         .leftJoin(instruments, eq(tasterEnquiry.instrumentId, instruments.id))
         .limit(1);
-      return res;
+      return res[0];
     }),
   edit: teacherProcedure
     .input(insertTasterEnquiryZodSchema)
@@ -110,5 +114,88 @@ export const tasterRouter = createTRPCRouter({
         .where(eq(tasterEnquiry.id, input.id))
         .returning();
       return res[0];
+    }),
+  findAvailableLessonSlots: teacherProcedure
+    .input(
+      z.object({
+        instrumentId: z.string(),
+        startDate: z.date(),
+        endDate: z.date(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const teachersAndWorkingHours = await ctx.db
+        .select()
+        .from(instrumentsToTeachers)
+        .where(eq(instrumentsToTeachers.instrumentId, input.instrumentId))
+        .leftJoin(
+          workingHours,
+          eq(workingHours.teacherId, instrumentsToTeachers.teacherId),
+        );
+
+      const teachers = teachersAndWorkingHours.reduce(
+        (acc, curr) => {
+          const teacherId = curr.instruments_to_teachers.teacherId;
+          const workingHours = acc[teacherId] ?? [];
+          if (curr.workingHours) {
+            workingHours.push({
+              day: curr.workingHours.dayOfWeek,
+              startTime: curr.workingHours.startTime,
+              endTime: curr.workingHours.endTime,
+            });
+          }
+          return {
+            ...acc,
+            [teacherId]: workingHours,
+          };
+        },
+        {} as Record<
+          string,
+          { day: number; startTime: string; endTime: string }[]
+        >,
+      );
+
+      const getTimeSlots = (startTime: string, endTime: string) => {
+        const slots = [];
+        let start = new Date(`1970-01-01T${startTime}:00`);
+        const end = new Date(`1970-01-01T${endTime}:00`);
+
+        while (start < end) {
+          slots.push(start.toTimeString().substring(0, 5));
+          start = new Date(start.getTime() + 30 * 60000); // Add 30 minutes
+        }
+
+        return slots;
+      };
+
+      const availableSlots = Object.keys(teachers).reduce(
+        (acc, teacherId) => {
+          const workingHours = teachers[teacherId];
+          if (!workingHours) {
+            return acc; // Skip if workingHours is undefined
+          }
+
+          const slotsByDay = workingHours.reduce(
+            (dayAcc, wh) => {
+              const slots = getTimeSlots(wh.startTime, wh.endTime);
+              return {
+                ...dayAcc,
+                [wh.day]: (dayAcc[wh.day] ?? []).concat(slots),
+              };
+            },
+            {} as Record<number, string[]>,
+          );
+
+          return {
+            ...acc,
+            [teacherId]: slotsByDay,
+          };
+        },
+        {} as Record<string, Record<number, string[]>>,
+      );
+
+      console.log({ availableSlots });
+
+      return availableSlots;
     }),
 });

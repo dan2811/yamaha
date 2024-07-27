@@ -8,7 +8,7 @@ import {
   users,
   workingHours,
 } from "~/server/db/schemas";
-import { zodRoles } from "~/server/types";
+import { days, zodRoles } from "~/server/types";
 import { jsonAggBuildObject } from "~/server/db/drizzle-helpers";
 import { randomUUID } from "crypto";
 import { TRPCError } from "@trpc/server";
@@ -49,7 +49,7 @@ export const teacherRouter = createTRPCRouter({
           teacherId: workingHours.teacherId,
           workingHours: jsonAggBuildObject({
             id: workingHours.id,
-            dayOfWeek: workingHours.dayOfWeek,
+            day: workingHours.day,
             startTime: workingHours.startTime,
             endTime: workingHours.endTime,
           }),
@@ -111,7 +111,7 @@ export const teacherRouter = createTRPCRouter({
           id: teacher.id,
           workingHours: jsonAggBuildObject({
             id: workingHours.id,
-            dayOfWeek: workingHours.dayOfWeek,
+            day: workingHours.day,
             startTime: workingHours.startTime,
             endTime: workingHours.endTime,
           }),
@@ -169,22 +169,47 @@ export const teacherRouter = createTRPCRouter({
     .input(
       z.object({
         teacherId: z.string(),
-        dayOfWeek: z.number(),
+        day: z.enum(days),
         startTime: z.string(),
         endTime: z.string(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { teacherId, dayOfWeek, startTime, endTime } = input;
-      const res = await ctx.db.insert(workingHours).values({
-        teacherId,
-        dayOfWeek,
-        startTime,
-        endTime,
-        id: randomUUID(),
-      });
+      const { teacherId, day, startTime, endTime } = input;
+      const res = await ctx.db
+        .insert(workingHours)
+        .values({
+          teacherId,
+          day,
+          startTime,
+          endTime,
+          id: randomUUID(),
+        })
+        .returning();
       return res;
     }),
+  deleteWorkingHours: teacherProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(({ ctx, input }) => {
+      return ctx.db.delete(workingHours).where(eq(workingHours.id, input.id));
+    }),
+  updateWorkingHours: teacherProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        startTime: z.string(),
+        endTime: z.string(),
+      }),
+    )
+    .mutation(({ ctx, input }) =>
+      ctx.db
+        .update(workingHours)
+        .set({
+          startTime: input.startTime,
+          endTime: input.endTime,
+        })
+        .where(eq(workingHours.id, input.id)),
+    ),
   getWorkingHours: teacherProcedure
     .input(
       z.object({
