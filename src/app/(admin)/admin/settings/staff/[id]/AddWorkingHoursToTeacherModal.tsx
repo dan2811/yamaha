@@ -27,7 +27,7 @@ const EditWorkingHoursModal = ({
   const [endTime, setEndTime] = useState<string>();
 
   const thisDaysWorkingHours = allWorkingHours.filter(
-    (hourObj) => hourObj.dayOfWeek === days.indexOf(day!),
+    (hourObj) => hourObj.day === day,
   );
 
   return day !== undefined ? (
@@ -57,7 +57,7 @@ const EditWorkingHoursModal = ({
               await mutateAsync(
                 {
                   teacherId,
-                  dayOfWeek: days.indexOf(day),
+                  day,
                   startTime,
                   endTime,
                 },
