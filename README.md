@@ -8,7 +8,7 @@ The Postgres DB runs in a docker container. To Start the DB, run `sh start-datab
 
 Once you have created the DB, you need to duplicate the `.env.example` fil, rename to `.env` and fill in your values.
 
-Run bun db:push
+Run `bun db:push`
 
 ### Seeding the DB with data
 
