@@ -31,6 +31,8 @@ export const roomsRouter = createTRPCRouter({
           name:input.name,
           description:input.description,
           id:randomUUID()
-        })
+        }).returning();
+      return res;
     })
+    
 });

@@ -8,6 +8,8 @@ The Postgres DB runs in a docker container. To Start the DB, run `sh start-datab
 
 Once you have created the DB, you need to duplicate the `.env.example` fil, rename to `.env` and fill in your values.
 
+Establish connection with the Postres server. Create "yamaha" database.
+
 Run `bun db:push`
 
 ### Seeding the DB with data
