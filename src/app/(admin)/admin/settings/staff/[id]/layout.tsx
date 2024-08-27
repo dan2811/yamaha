@@ -4,11 +4,7 @@ import EditInstrumentsModal from "./AddInstrumentToTeacherModal";
 import AdminButton from "~/app/_components/admin/Button";
 import InstrumentPill from "~/app/_components/admin/InstrumentPill";
 import { api } from "~/trpc/react";
-import { type Day, days } from "~/server/types";
-import {
-  parseDbTime,
-  transformNumberToWeekDay,
-} from "~/app/_utils/dateHelpers";
+import { days } from "~/server/types";
 import WorkingHoursCard from "./WorkingHoursCard";
 
 const EditTeacher = ({
@@ -68,15 +64,19 @@ const EditTeacher = ({
       <div>
         <p className="font-light">Working days</p>
         <div className="flex flex-wrap gap-2">
-          {days.map((day) => (
-            <WorkingHoursCard
-              key={day + id + teacher.id}
-              hours={allWorkingHours?.filter((wh) => wh.day === day)[0]}
-              day={day}
-              teacherId={id}
-              refetch={refetch}
-            />
-          ))}
+          {days.map((day) =>
+            workingHoursIsLoading ? (
+              <div key={day}>Loading...</div>
+            ) : (
+              <WorkingHoursCard
+                key={day + id + teacher.id}
+                hours={allWorkingHours?.filter((wh) => wh.day === day)[0]}
+                day={day}
+                teacherId={id}
+                refetch={refetch}
+              />
+            ),
+          )}
         </div>
       </div>
       <EditInstrumentsModal

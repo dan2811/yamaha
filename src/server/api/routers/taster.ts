@@ -6,11 +6,10 @@ import {
   instruments,
   instrumentsToTeachers,
   tasterEnquiry,
-  teacher,
   workingHours,
 } from "~/server/db/schemas";
 import { randomUUID } from "crypto";
-import { jsonAggBuildObject } from "~/server/db/drizzle-helpers";
+import type { Day } from "~/server/types";
 
 export const tasterRouter = createTRPCRouter({
   create: teacherProcedure
@@ -139,7 +138,7 @@ export const tasterRouter = createTRPCRouter({
           const workingHours = acc[teacherId] ?? [];
           if (curr.workingHours) {
             workingHours.push({
-              day: curr.workingHours.dayOfWeek,
+              day: curr.workingHours.day,
               startTime: curr.workingHours.startTime,
               endTime: curr.workingHours.endTime,
             });
@@ -151,14 +150,14 @@ export const tasterRouter = createTRPCRouter({
         },
         {} as Record<
           string,
-          { day: number; startTime: string; endTime: string }[]
+          { day: Day; startTime: string; endTime: string }[]
         >,
       );
 
       const getTimeSlots = (startTime: string, endTime: string) => {
         const slots = [];
-        let start = new Date(`1970-01-01T${startTime}:00`);
-        const end = new Date(`1970-01-01T${endTime}:00`);
+        let start = new Date(`1970-01-01T${startTime}`);
+        const end = new Date(`1970-01-01T${endTime}`);
 
         while (start < end) {
           slots.push(start.toTimeString().substring(0, 5));
@@ -183,7 +182,7 @@ export const tasterRouter = createTRPCRouter({
                 [wh.day]: (dayAcc[wh.day] ?? []).concat(slots),
               };
             },
-            {} as Record<number, string[]>,
+            {} as Record<Day, string[]>,
           );
 
           return {
@@ -191,10 +190,8 @@ export const tasterRouter = createTRPCRouter({
             [teacherId]: slotsByDay,
           };
         },
-        {} as Record<string, Record<number, string[]>>,
+        {} as Record<string, Record<Day, string[]>>,
       );
-
-      console.log({ availableSlots });
 
       return availableSlots;
     }),

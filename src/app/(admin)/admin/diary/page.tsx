@@ -1,16 +1,17 @@
+"use client";
 import type { InferSelectModel } from "drizzle-orm";
-import { getClassClashes } from "~/app/_utils/ClassHelpers";
 import { findEarliestClass, findLatestClass } from "~/app/_utils/ClassHelpers";
 import {
   parseDbTime,
   transformNumberToWeekDay,
 } from "~/app/_utils/dateHelpers";
 import type { classes, lessons } from "~/server/db/schemas";
-import { api } from "~/trpc/server";
 import { generateTimeIntervals } from "./diaryHelpers";
 import Link from "next/link";
+import { api } from "~/trpc/react";
+import { useRouter } from "next/navigation";
 
-const TimetableCard = async ({
+const TimetableCard = ({
   class: c,
   lesson,
   currentTime,
@@ -30,18 +31,21 @@ const TimetableCard = async ({
   }
 
   if (!lesson) {
-    const instrument = await api.instrument.show({ id: c.instrumentId });
-    const teacher = await api.teacher.show({ id: c.regularTeacherId });
-    let classType;
-    if (c.typeId) {
-      classType = await api.classType.show({ classTypeId: c.typeId });
-    }
-    let classLevel;
-    if (c.levelId) {
-      [classLevel] = await api.classes.showClassLevel({
-        classLevelId: c.levelId,
-      });
-    }
+    const { data: instrument } = api.instrument.show.useQuery({
+      id: c.instrumentId,
+    });
+    const { data: teacher } = api.teacher.show.useQuery({
+      id: c.regularTeacherId,
+    });
+    const { data: classType } = api.classType.show.useQuery({
+      classTypeId: c.typeId ?? "",
+    });
+
+    const { data } = api.classes.showClassLevel.useQuery({
+      classLevelId: c.levelId ?? "",
+    });
+
+    const classLevel = data ? data[0] : undefined;
 
     return (
       <div
@@ -49,7 +53,7 @@ const TimetableCard = async ({
       >
         <Link href={`/admin/classes/${c.id}`} className="h-full w-full">
           <p className="h-full w-full">
-            {teacher.user?.name} {instrument?.name} - {classLevel?.name ?? ""}{" "}
+            {teacher?.user?.name} {instrument?.name} - {classLevel?.name ?? ""}{" "}
             {classType?.name ?? ""}
           </p>
         </Link>
@@ -59,27 +63,40 @@ const TimetableCard = async ({
   return <div></div>;
 };
 
-const Diary = async ({ searchParams }: { searchParams?: { date: string } }) => {
+const Diary = ({ searchParams }: { searchParams?: { date: string } }) => {
+  const router = useRouter();
+
+  if (!searchParams?.date) {
+    void router.push(`?date=${new Date().toISOString().split("T")[0]}`);
+  }
   const date = new Date(searchParams?.date ?? new Date());
-  const rooms = await api.rooms.list();
-  const classes = await api.register.getClassesForDay({
-    day: transformNumberToWeekDay(date.getDay())!,
-    endDate: date,
-  });
-  const lessons = await api.lessons.getLessonsForDate({ date });
+  const { data: rooms, isLoading: isRoomsLoading } = api.rooms.list.useQuery();
+  const { data: classes, isLoading: isClassesLoading } =
+    api.register.getClassesForDay.useQuery({
+      day: transformNumberToWeekDay(date.getDay())!,
+      endDate: date,
+    });
+  const { data: lessons, isLoading: isLessonsLoading } =
+    api.lessons.getLessonsForDate.useQuery({ date });
 
   if (!classes && !lessons) {
     return <div>No classes or lessons for this day</div>;
   }
 
-  const earliestClassOrLesson = findEarliestClass([...classes, ...lessons]);
+  if (isRoomsLoading || isClassesLoading || isLessonsLoading) {
+    return <div>Loading...</div>;
+  }
 
-  const latestClassOrlesson = findLatestClass([...classes, ...lessons]);
+  const earliestClassOrLesson = findEarliestClass([...classes!, ...lessons!]);
+
+  const latestClassOrlesson = findLatestClass([...classes!, ...lessons!]);
 
   const times = generateTimeIntervals(
     !earliestClassOrLesson ? "09:00" : earliestClassOrLesson.startTime,
     !latestClassOrlesson ? "21:00" : latestClassOrlesson.endTime,
   );
+
+  console.log("loaded");
 
   return (
     <table className="w-full table-fixed border-collapse">
@@ -88,7 +105,7 @@ const Diary = async ({ searchParams }: { searchParams?: { date: string } }) => {
           <th className="w-16 max-w-12 table-auto border-2 border-black">
             Time
           </th>
-          {rooms.map((room) => (
+          {rooms?.map((room) => (
             <th key={room.id} className="border-2 border-black">
               {room.name}
             </th>
@@ -100,16 +117,18 @@ const Diary = async ({ searchParams }: { searchParams?: { date: string } }) => {
           return (
             <tr key={currentTime} className={`h-10 hover:bg-purple-200`}>
               <td>{currentTime}</td>
-              {rooms.map((room) => {
-                const roomClasses = classes.filter((c) => c.roomId === room.id);
+              {rooms?.map((room) => {
+                const roomClasses = classes?.filter(
+                  (c) => c.roomId === room.id,
+                );
 
-                const classesHappeningNow = roomClasses.filter((c) => {
+                const classesHappeningNow = roomClasses?.filter((c) => {
                   const startTime = parseDbTime(c.startTime);
                   const endTime = parseDbTime(c.endTime);
                   return startTime <= currentTime && currentTime < endTime;
                 });
 
-                if (!classesHappeningNow.length) {
+                if (!classesHappeningNow?.length) {
                   return (
                     <td key={room.id + currentTime} className="border-2"></td>
                   );
@@ -117,7 +136,7 @@ const Diary = async ({ searchParams }: { searchParams?: { date: string } }) => {
 
                 if (classesHappeningNow.length === 1) {
                   const classAtTime = classesHappeningNow[0]!;
-                  const lesson = lessons.find(
+                  const lesson = lessons?.find(
                     (l) =>
                       l.classId === classAtTime.id &&
                       l.startTime === currentTime,
@@ -152,7 +171,7 @@ const Diary = async ({ searchParams }: { searchParams?: { date: string } }) => {
                           <div key={c.id} className="w-1/2">
                             <TimetableCard
                               class={c}
-                              lesson={lessons.find((l) => l.classId === c.id)}
+                              lesson={lessons?.find((l) => l.classId === c.id)}
                               currentTime={currentTime}
                             />
                           </div>

@@ -1,9 +1,9 @@
 "use client";
 import type { InferSelectModel } from "drizzle-orm";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { workingHours } from "~/server/db/schemas";
-import { Day } from "~/server/types";
+import type { workingHours } from "~/server/db/schemas";
+import type { Day } from "~/server/types";
 import { api } from "~/trpc/react";
 
 interface SwitchProps {
@@ -47,7 +47,7 @@ const WorkingHoursCard = ({
   day: Day;
   teacherId: string;
   hours?: InferSelectModel<typeof workingHours>;
-  refetch: () => Promise<void>;
+  refetch: () => Promise<unknown>;
 }) => {
   const [active, setActive] = useState(Boolean(hours));
   const [startTime, setStartTime] = useState(hours?.startTime ?? "16:00");
