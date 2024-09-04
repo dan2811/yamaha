@@ -12,8 +12,8 @@ const Rooms = () => {
       <div className="flex-1">
         <h3 className="text-2xl font-bold">Rooms</h3>
         <AdminButton>
-        <Link href="/admin/settings/rooms/create">Add a room</Link>
-      </AdminButton>
+          <Link href="/admin/settings/rooms/create">Add a room</Link>
+        </AdminButton>
       </div>
     </div>
   );
