@@ -8,7 +8,6 @@ import { api } from "~/trpc/react";
 const Rooms = () => {
   const { data: rooms, isLoading } = api.rooms.list.useQuery();
   const router = useRouter();
-  console.log(rooms)
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -33,6 +32,7 @@ const Rooms = () => {
             {rooms?.map(({id, name, description}) => {
               return (
                 <tr
+                  onClick={()=> router.push(`/admin/settings/rooms/${id}`)}
                   title={"roomsList"}
                   key={id}
                   className="cursor-pointer border-b-2 border-purple-500/20 hover:bg-purple-500/40"
