@@ -35,7 +35,7 @@ export const roomsRouter = createTRPCRouter({
         }).returning();
       return res;
     }),
-    updateRooms: teacherProcedure
+    update: teacherProcedure
     .input(
       z.object({
         id: z.string(),
