@@ -8,10 +8,10 @@ import { api } from "~/trpc/react";
 const Rooms = () => {
   const { data: rooms, isLoading } = api.rooms.list.useQuery();
   const router = useRouter();
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
-  
   return (
     <div className="flex h-full flex-col p-2">
       <div className="flex-1">
@@ -32,6 +32,7 @@ const Rooms = () => {
             {rooms?.map(({id, name, description}) => {
               return (
                 <tr
+                  onClick={()=> router.push(`/admin/settings/rooms/${id}`)}
                   title={"roomsList"}
                   key={id}
                   className="cursor-pointer border-b-2 border-purple-500/20 hover:bg-purple-500/40"
@@ -44,7 +45,7 @@ const Rooms = () => {
             )}
           </tbody>
         </table>
-      </div>  
+      </div>
     </div>
   );
 };
