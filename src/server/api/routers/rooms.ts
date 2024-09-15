@@ -1,6 +1,7 @@
 import { createTRPCRouter, teacherProcedure } from "../trpc";
 import { rooms } from "~/server/db/schemas";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export const roomsRouter = createTRPCRouter({
@@ -33,6 +34,24 @@ export const roomsRouter = createTRPCRouter({
           id:randomUUID()
         }).returning();
       return res;
-    })
-    
+    }),
+    update: teacherProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        description: z.string()
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const res = await ctx.db
+        .update(rooms)
+        .set({
+          name:input.name,
+          description:input.description
+        })
+        .where(eq(rooms.id, input.id))
+        .returning();
+      return res;
+    }) 
 });
