@@ -23,5 +23,3 @@ Run `bun db:studio` to see a really intuitive and helpful UI to allow you to qui
 ## App
 
 Run `bun dev` to start the app. There should be a URL outputted in the terminal that you can visit to see the app running.
-
-
