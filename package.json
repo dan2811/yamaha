@@ -10,7 +10,8 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "seed": "bun ./src/server/db/seed.ts"
+    "seed": "bun ./src/server/db/seed.ts",
+    "test": "node --watch --import tsx --test ./src/**/*.test.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^0.7.0",
@@ -48,6 +49,7 @@
     "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.19.1",
     "typescript": "^5.4.2"
   },
   "ct3aMetadata": {

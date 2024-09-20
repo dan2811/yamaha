@@ -1,6 +1,6 @@
 "use client";
 import type { InferSelectModel } from "drizzle-orm";
-import { findEarliestClass, findLatestClass } from "~/app/_utils/ClassHelpers";
+import { findEarliestClass, findLatestClass } from "~/app/_utils/classHelpers";
 import {
   parseDbTime,
   transformNumberToWeekDay,
