@@ -10,8 +10,7 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "seed": "bun ./src/server/db/seed.ts",
-    "test": "node --watch --import tsx --test ./src/**/*.test.ts"
+    "seed": "bun ./src/server/db/seed.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^0.7.0",
@@ -33,6 +32,7 @@
     "zod": "^3.23.3"
   },
   "devDependencies": {
+    "@types/bun": "^1.1.10",
     "@types/eslint": "^8.56.2",
     "@types/node": "^20.11.20",
     "@types/react": "^18.2.57",
