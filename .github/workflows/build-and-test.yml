@@ -16,12 +16,12 @@ jobs:
           node-version: "20"
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Build
         env:
           SKIP_ENV_VALIDATION: true
-        run: bun run build
+        run: export SKIP_ENV_VALIDATION=true && bun run build
 
       - name: Test
         run: bun test
