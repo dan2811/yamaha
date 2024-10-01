@@ -23,3 +23,9 @@ Run `bun db:studio` to see a really intuitive and helpful UI to allow you to qui
 ## App
 
 Run `bun dev` to start the app. There should be a URL outputted in the terminal that you can visit to see the app running.
+
+## Testing
+
+### Unit tests
+
+To run the unit tests, run `bun test` from the root of the project. Ensure you have run `bun i` before running the tests.

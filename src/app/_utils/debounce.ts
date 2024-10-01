@@ -4,7 +4,7 @@ export const debounce = (
   func: (...args: unknown[]) => Promise<void>,
   delay: number,
 ) => {
-  let timeoutId: NodeJS.Timeout;
+  let timeoutId: Timer;
   return (...args: unknown[]) => {
     if (timeoutId) {
       clearTimeout(timeoutId);

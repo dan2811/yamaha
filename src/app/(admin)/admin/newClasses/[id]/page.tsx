@@ -181,9 +181,7 @@ const AddPupil = ({
     InferSelectModel<typeof pupils>[] | []
   >([]);
   const [showPopover, setShowPopover] = useState(false);
-  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
-    null,
-  );
+  const [debounceTimeout, setDebounceTimeout] = useState<Timer | null>(null);
 
   const query = getQueryKey(api.pupils.list, {
     searchString: inputValue.trim(),
