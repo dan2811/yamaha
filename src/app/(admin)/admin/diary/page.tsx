@@ -79,6 +79,18 @@ const Diary = ({ searchParams }: { searchParams?: { date: string } }) => {
   const { data: lessons, isLoading: isLessonsLoading } =
     api.lessons.getLessonsForDate.useQuery({ date });
 
+  const { data: allOpeningHours } = api.openingHours.list.useQuery();
+
+  const todaysOpeningHours = allOpeningHours?.find(
+    (record) => record.day === transformNumberToWeekDay(date.getDay()),
+  );
+
+  const schoolOpeningTime =
+    todaysOpeningHours?.startTime.slice(0, 5) ?? "00:01";
+  const schoolClosingTime = todaysOpeningHours?.endTime.slice(0, 5) ?? "23:59";
+
+  console.log("TIME", todaysOpeningHours?.startTime);
+
   if (!classes && !lessons) {
     return <div>No classes or lessons for this day</div>;
   }
@@ -95,8 +107,6 @@ const Diary = ({ searchParams }: { searchParams?: { date: string } }) => {
     !earliestClassOrLesson ? "09:00" : earliestClassOrLesson.startTime,
     !latestClassOrlesson ? "21:00" : latestClassOrlesson.endTime,
   );
-
-  console.log("loaded");
 
   return (
     <table className="w-full table-fixed border-collapse">
@@ -115,7 +125,10 @@ const Diary = ({ searchParams }: { searchParams?: { date: string } }) => {
       <tbody>
         {times.map((currentTime) => {
           return (
-            <tr key={currentTime} className={`h-10 hover:bg-purple-200`}>
+            <tr
+              key={currentTime}
+              className={`h-10 hover:bg-purple-200 ${currentTime === schoolOpeningTime ? "border-t-4 border-dashed border-red-500" : ""} ${currentTime === schoolClosingTime ? "border-b-4 border-dashed border-red-500" : ""} ${currentTime < schoolOpeningTime || currentTime > schoolClosingTime ? "bg-gray-300" : ""}`}
+            >
               <td>{currentTime}</td>
               {rooms?.map((room) => {
                 const roomClasses = classes?.filter(
