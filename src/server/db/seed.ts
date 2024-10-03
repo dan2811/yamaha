@@ -9,7 +9,9 @@ import {
   instruments,
   instrumentsToTeachers,
   lessons,
+  payments,
   pupils,
+  pupils_to_payments,
   rooms,
   roomsToInstruments,
   teacher,
@@ -445,6 +447,60 @@ const insertClassLevels = async () => {
   ]);
 };
 
+const insertPayments = async () => {
+  return db
+    .insert(payments)
+    .values([
+      {
+        amountInPennies: 4262,
+        method: "Standing Order",
+        paid: new Date(),
+      },
+      {
+        amountInPennies: 1500,
+        method: "Cash",
+        paid: new Date(),
+        notes: "Paid enrolment",
+      },
+      {
+        amountInPennies: 8524,
+        method: "Other",
+        paid: new Date(),
+        notes: "Paid for 2 months",
+      },
+      {
+        amountInPennies: 1000,
+        method: "Card",
+        paid: new Date(),
+        notes: "Paid for drum sticks",
+      },
+      {
+        amountInPennies: 4264,
+        method: "Standing Order",
+        paid: new Date(),
+        notes: "Regular lesson payment",
+      },
+    ])
+    .returning();
+};
+
+const insertPaymentsToPupils = async (
+  createdPayments: InferSelectModel<typeof payments>[],
+  createdPupils: InferSelectModel<typeof pupils>[],
+) => {
+  await db.insert(pupils_to_payments).values(
+    createdPayments.map((payment) => {
+      const pupilId =
+        createdPupils[Math.floor(Math.random() * createdPupils.length)]!.id;
+      console.log(payment.id, pupilId);
+      return {
+        paymentId: payment.id,
+        pupilId,
+      };
+    }),
+  );
+};
+
 const main = async () => {
   await db.delete(lessons);
   await db.delete(rooms);
@@ -456,6 +512,8 @@ const main = async () => {
   await db.delete(classes);
   await db.delete(classesToPupils);
   await db.delete(classLevel);
+  await db.delete(payments);
+  await db.delete(pupils_to_payments);
   const createdRooms = await insertRooms();
   const createdUsers = await insertUsers();
   const createdInstruments = await insertInstruments(createdRooms);
@@ -479,6 +537,11 @@ const main = async () => {
   const createdClassLevels = await insertClassLevels();
 
   // const createdLessons = await insertLessons({ createdClasses });
+  const createdPayments = await insertPayments();
+  const createdPaymentsToPupils = await insertPaymentsToPupils(
+    createdPayments,
+    createdPupils,
+  );
 
   console.log("Seed complete!");
   process.exit(0);
