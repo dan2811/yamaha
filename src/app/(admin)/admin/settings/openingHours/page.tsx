@@ -6,6 +6,8 @@ import BackButton from "../../tasters/@show/_backButton";
 
 const page = async () => {
   const result = await api.openingHours.list();
+  const { role } = await api.users.getCurrentUser();
+
   return (
     <div>
       <span className="flex justify-between pb-2">
@@ -18,6 +20,7 @@ const page = async () => {
             key={day}
             day={day}
             hours={result.find((r) => r.day === day)}
+            disabled={role !== "superAdmin"}
           />
         ))}
       </div>
