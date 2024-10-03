@@ -24,14 +24,12 @@ const Switch: React.FC<SwitchProps> = ({ isOn, handleToggle, id }) => {
       />
       <label
         htmlFor={id}
-        className={`flex h-6 w-12 cursor-pointer items-center rounded-full p-1 transition-colors duration-300 ${
-          isOn ? "bg-purple-600" : "bg-gray-300"
-        }`}
+        className={`flex h-6 w-12 cursor-pointer items-center rounded-full p-1 transition-colors duration-300 ${isOn ? "bg-purple-600" : "bg-gray-300"
+          }`}
       >
         <div
-          className={`h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
-            isOn ? "translate-x-6" : "translate-x-0"
-          }`}
+          className={`h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-300 ${isOn ? "translate-x-6" : "translate-x-0"
+            }`}
         />
       </label>
     </div>
@@ -41,9 +39,11 @@ const Switch: React.FC<SwitchProps> = ({ isOn, handleToggle, id }) => {
 const OpeningHoursCard = ({
   day,
   hours,
+  disabled
 }: {
   day: Day;
   hours?: InferSelectModel<typeof openingHours>;
+  disabled: boolean;
 }) => {
   const [active, setActive] = useState(Boolean(hours));
   const [startTime, setStartTime] = useState(hours?.startTime ?? "16:00");
@@ -52,6 +52,10 @@ const OpeningHoursCard = ({
   const handleStartTimeChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
+    if (disabled) {
+      toast.error("You do not have permission to change opening hours. Please ask a super admin.");
+      return;
+    }
     const loadingToast = toast.loading("Saving...");
 
     setStartTime(e.target.value);
@@ -77,6 +81,11 @@ const OpeningHoursCard = ({
   const handleEndTimeChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
+    if (disabled) {
+      toast.error("You do not have permission to change opening hours. Please ask a super admin.");
+      return;
+    }
+
     const loadingToast = toast.loading("Saving...");
     setEndTime(e.target.value);
     await updateOpeningHours(
@@ -109,10 +118,17 @@ const OpeningHoursCard = ({
   return (
     <form className="flex h-fit w-fit flex-col gap-2 rounded border-2 border-purple-600 bg-purple-300 p-4">
       <span className="flex justify-between">
+        {
+          disabled && <div className="text-xl">⛔️</div>
+        }
         <h2 className="text-lg">{day}</h2>
         <Switch
           id={day}
           handleToggle={async () => {
+            if (disabled) {
+              toast.error("You do not have permission to change opening hours. Please ask a super admin.");
+              return;
+            }
             if (active) {
               void deleteOpeningHours({
                 day,

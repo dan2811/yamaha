@@ -131,5 +131,5 @@ const getRoleBasedProcedures = () => {
   return procedures;
 };
 
-export const { teacherProcedure, adminProcedure, superAdminProcedure } =
+export const { clientProcedure, teacherProcedure, adminProcedure, superAdminProcedure } =
   getRoleBasedProcedures();
