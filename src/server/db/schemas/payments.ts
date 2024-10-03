@@ -5,7 +5,7 @@ import { createTable } from "../mainSchema";
 import { pupils } from "./pupils";
 import { randomUUID } from "crypto";
 
-export const payments = createTable("user", {
+export const payments = createTable("payments", {
   id: varchar("id", { length: 255 })
     .notNull()
     .primaryKey()
