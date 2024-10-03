@@ -1,7 +1,8 @@
-// import { z } from "zod";
-// import { teacherProcedure } from "../trpc";
+import { clientProcedure, createTRPCRouter } from "../trpc";
 
-// const userRouter = createTRPCRouter({
-//   get: teacherProcedure
-//     .query(async ({ input }) => {}),
-// });
+export const userRouter = createTRPCRouter({
+  getCurrentUser: clientProcedure
+    .query(async ({ input, ctx }) => {
+      return ctx.session.user;
+    }),
+});

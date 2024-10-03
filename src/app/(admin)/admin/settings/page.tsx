@@ -14,6 +14,9 @@ const AdminSettings = () => {
       <AdminButton>
         <Link href="/admin/settings/rooms">Rooms</Link>
       </AdminButton>
+      <AdminButton>
+        <Link href="/admin/settings/openingHours">Opening Hours</Link>
+      </AdminButton>
     </div>
   );
 };
