@@ -13,7 +13,7 @@ export const payments = createTable("payments", {
   // paid is used to determine if the payment has been completed, if set to null then the payment is outstanding.
   paid: timestamp("paid", {
     mode: "date",
-  }).default(sql`CURRENT_TIMESTAMP`),
+  }),
   method: varchar("method", { enum: paymentMethods, length: 35 })
     .default("Card")
     .notNull(),

@@ -21,7 +21,7 @@ const Payments = async ({ pupilId }: { pupilId: string }) => {
               <th>Notes</th>
             </tr>
           </thead>
-          <AddPayment />
+          <AddPayment pupilId={pupilId} />
           {payments.map((payment) => {
             if (!payment) return;
             return (
