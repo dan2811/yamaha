@@ -71,6 +71,12 @@ const insertUsers = async () => {
       },
       {
         id: randomUUID(),
+        name: "Maria",
+        email: "ev.maria.pro@gmail.com",
+        role: "superAdmin",
+      },
+      {
+        id: randomUUID(),
         role: "teacher",
         ...userData.david,
       },
