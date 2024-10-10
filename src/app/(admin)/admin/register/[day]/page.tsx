@@ -1,6 +1,7 @@
 "use client";
 
 import type { InferSelectModel } from "drizzle-orm";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { type ChangeEvent, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -392,10 +393,14 @@ const PupilRow = ({
         <ClassTypeName typeId={classe.typeId} />
       </td>
       <td className="sticky left-64 whitespace-nowrap border-r border-gray-200 bg-purple-200 group-hover:bg-purple-300">
-        <p className=" max-w-32 overflow-clip p-1">{pupil.fName}</p>
+        <Link href={`/admin/pupils/${pupil.id}`} className="h-full w-full">
+          <p className=" max-w-32 overflow-clip p-1">{pupil.fName}</p>
+        </Link>
       </td>
       <td className="sticky left-80 whitespace-nowrap border-r border-gray-200 bg-purple-200 group-hover:bg-purple-300">
-        <p className="max-w-32 overflow-clip p-1">{pupil.lName}</p>
+        <Link href={`/admin/pupils/${pupil.id}`} className="h-full w-full">
+          <p className="max-w-32 overflow-clip p-1">{pupil.lName}</p>
+        </Link>
       </td>
       {dates.map((date) => {
         return (

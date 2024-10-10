@@ -53,6 +53,16 @@ export const attendanceValues = [
 export const zodAttendanceValues = z.enum(attendanceValues);
 export type AttendanceValues = z.infer<typeof zodAttendanceValues>;
 
+export const paymentMethods = [
+  "Card",
+  "Cash",
+  "Cheque",
+  "Standing Order",
+  "Other",
+] as const;
+export const zodPaymentMethods = z.enum(paymentMethods);
+export type PaymentMethods = z.infer<typeof zodPaymentMethods>;
+
 export interface GoogleProfile {
   aud: string;
   azp: string;

@@ -10,6 +10,7 @@ import { roomsRouter } from "./routers/rooms";
 import { lessonsRouter } from "./routers/lessons";
 import { openingHoursRouter } from "./routers/openingHours";
 import { userRouter } from "./routers/userRouter";
+import { paymentsRouter } from "./routers/payments";
 
 /**
  * This is the primary router for your server.
@@ -28,6 +29,7 @@ export const appRouter = createTRPCRouter({
   lessons: lessonsRouter,
   openingHours: openingHoursRouter,
   users: userRouter,
+  payments: paymentsRouter,
 });
 
 // export type definition of API
