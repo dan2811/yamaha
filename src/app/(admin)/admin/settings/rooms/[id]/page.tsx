@@ -24,7 +24,7 @@ const ShowRoom = ({  params: { id }  }: { params: { id: string } }) => {
               </AdminButton>
           
               <BackButton
-                returnPath="/admin/newClasses/list"
+                returnPath="/admin/settings/rooms"
                 label="⬅️ Back to list"
               />
             </span>
