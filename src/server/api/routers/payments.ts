@@ -25,7 +25,7 @@ export const paymentsRouter = createTRPCRouter({
       z.object({
         pupilId: z.string(),
         amountInPennies: z.number(),
-        date: z.string().nullable(),
+        paid: z.date().nullable(),
         method: z.enum(paymentMethods),
         notes: z.string(),
       }),

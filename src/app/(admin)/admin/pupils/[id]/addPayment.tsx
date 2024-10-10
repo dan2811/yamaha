@@ -45,7 +45,7 @@ const AddPayment = ({ pupilId }: { pupilId: string }) => {
     }
     console.log({
       amountInPennies,
-      date: isNotPaid ? null : date,
+      paid: isNotPaid ? null : date,
       method: validatedPaymentMethod,
       notes,
       pupilId,
@@ -53,7 +53,7 @@ const AddPayment = ({ pupilId }: { pupilId: string }) => {
     await mutateAsync(
       {
         amountInPennies: parseFloat(amount) * 100,
-        date: isNotPaid ? null : date,
+        paid: isNotPaid ? null : new Date(date),
         method: validatedPaymentMethod,
         notes,
         pupilId,
@@ -94,7 +94,7 @@ const AddPayment = ({ pupilId }: { pupilId: string }) => {
         <input
           type="date"
           className="rounded-xl p-1 disabled:bg-slate-400/50 disabled:opacity-50"
-          disabled={!isNotPaid}
+          disabled={isNotPaid}
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
