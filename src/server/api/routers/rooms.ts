@@ -61,7 +61,7 @@ export const roomsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const res = await ctx.db.select().from(rooms).where(eq(rooms.id, input.id));
+      const [res] = await ctx.db.select().from(rooms).where(eq(rooms.id, input.id)).limit(1);
       return res;
     }),
 });
