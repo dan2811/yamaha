@@ -50,7 +50,7 @@ const AddPayment = ({ pupilId }: { pupilId: string }) => {
       notes,
       pupilId,
     });
-    mutateAsync(
+    await mutateAsync(
       {
         amountInPennies: parseFloat(amount) * 100,
         date: isNotPaid ? null : date,
