@@ -4,6 +4,7 @@ import { api } from "~/trpc/server";
 import { InfoCard } from "~/app/_components/admin/InfoCard";
 import { calculateAge } from "~/app/_utils/dateHelpers";
 import Payments from "./payments";
+import Lessons from "./lessons";
 
 const PupilShow = async ({ params }: { params: { id: string } }) => {
   const pupil = await api.pupils.show({ pupilId: params.id });
@@ -30,7 +31,7 @@ const PupilShow = async ({ params }: { params: { id: string } }) => {
             Status: pupil.isDroppedOut ? "Dropped out" : "Active",
           }}
         />
-        <div>Lessons list here</div>
+        <Lessons pupilId={params.id} />
         <Payments pupilId={params.id} />
       </article>
     </div>
