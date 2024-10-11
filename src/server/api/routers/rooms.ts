@@ -53,15 +53,5 @@ export const roomsRouter = createTRPCRouter({
         .where(eq(rooms.id, input.id))
         .returning();
       return res;
-    }),
-    show: teacherProcedure
-    .input(
-      z.object({
-        id: z.string()
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const [res] = await ctx.db.select().from(rooms).where(eq(rooms.id, input.id)).limit(1);
-      return res;
-    }),
+    }) 
 });
