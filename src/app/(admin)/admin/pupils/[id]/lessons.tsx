@@ -1,9 +1,7 @@
 import React from "react";
-import { api } from "~/trpc/server";
 
-const Lessons = () => {
-    
-  return <div>Lessons</div>;
+const Lessons = ({ pupilId }: { pupilId: string }) => {
+  return <div>Lessons for pupil with id: {pupilId}</div>;
 };
 
 export default Lessons;
