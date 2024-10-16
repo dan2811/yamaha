@@ -6,9 +6,13 @@ import Link from "next/link";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
 
+import { InfoCard } from "~/app/_components/admin/InfoCard";
+import LoadingSpinner from "~/app/_components/admin/LoadingSpinner";
+
 const ShowRoom = ({  params: { id }  }: { params: { id: string } }) => {
     const { data, isLoading, isError, error } = api.rooms.show.useQuery({ id });
     const router = useRouter();
+
   
     if (isLoading) {
       return <div>Loading...</div>;
@@ -17,7 +21,7 @@ const ShowRoom = ({  params: { id }  }: { params: { id: string } }) => {
     return (
         <div className="h-full w-full p-2">
           <span className="flex justify-between">
-            <h3 className="text-xl font-bold">{data.name}</h3>
+            <h3 className="text-xl font-bold">Room</h3>
             <span className="flex gap-2">
               <AdminButton>
                 <Link href="/admin/settings/rooms/update">✏️ Edit</Link>
@@ -29,10 +33,16 @@ const ShowRoom = ({  params: { id }  }: { params: { id: string } }) => {
               />
             </span>
           </span>
-            <div>
+          <article className="grid grid-cols-1 gap-6 p-2 sm:grid-cols-2">
+            <InfoCard 
+              title={data.name}
+              info={{}}
+            >
+              <div className="space-y-4 p-6">
                 <p>{data.description}</p>
-            </div>
-           
+              </div>
+            </InfoCard>  
+          </article>
         </div>
     )  
 }
