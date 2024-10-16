@@ -460,25 +460,25 @@ const insertPayments = async () => {
       {
         amountInPennies: 4262,
         method: "Standing Order",
-        paid: new Date(),
+        paid: new Date(new Date().setDate(new Date().getDate() - 1)),
       },
       {
         amountInPennies: 1500,
         method: "Cash",
-        paid: new Date(),
+        paid: new Date(new Date().setDate(new Date().getDate() - 3)),
         notes: "Paid enrolment",
       },
       {
         amountInPennies: 8524,
         method: "Other",
-        paid: new Date(),
+        paid: new Date(new Date().setDate(new Date().getDate() - 10)),
         notes: "Paid for 2 months",
       },
       {
         amountInPennies: 1000,
         method: "Card",
-        paid: new Date(),
-        notes: "Paid for drum sticks",
+        paid: null,
+        notes: "Owes for drum sticks",
       },
       {
         amountInPennies: 4264,

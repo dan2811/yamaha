@@ -8,5 +8,6 @@ export default {
   dbCredentials: {
     url: env.POSTGRES_URL,
   },
+  out: "./src/server/db/migrations",
   tablesFilter: ["yamaha_*"],
 } satisfies Config;
