@@ -17,11 +17,12 @@ const ShowRoom = ({  params: { id }  }: { params: { id: string } }) => {
     if (isLoading) {
       return <div>Loading...</div>;
     }
-    if (isError) return <p>{error.message}</p>;
+    if (isError) return <div>{error.message}</div>;
+    if (!data) return <div>Could not find the room.</div>
     return (
         <div className="h-full w-full p-2">
           <span className="flex justify-between">
-            <h3 className="text-xl font-bold">{data?.name}</h3>
+            <h3 className="text-xl font-bold">{data.name}</h3>
             <span className="flex gap-2">
               <AdminButton>
                 <Link href="/admin/settings/rooms/update">✏️ Edit</Link>
@@ -39,7 +40,7 @@ const ShowRoom = ({  params: { id }  }: { params: { id: string } }) => {
               info={{}}
             >
               <div className="space-y-4 p-6">
-                <p>{data?.description}</p>
+                <p>{data.description}</p>
               </div>
             </InfoCard>  
           </article>
