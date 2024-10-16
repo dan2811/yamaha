@@ -4,15 +4,11 @@ import BackButton from "../../../tasters/@show/_backButton";
 import React from "react";
 import Link from "next/link";
 import { api } from "~/trpc/react";
-import { useRouter } from "next/navigation";
-
 import { InfoCard } from "~/app/_components/admin/InfoCard";
-import LoadingSpinner from "~/app/_components/admin/LoadingSpinner";
+
 
 const ShowRoom = ({  params: { id }  }: { params: { id: string } }) => {
     const { data, isLoading, isError, error } = api.rooms.show.useQuery({ id });
-    const router = useRouter();
-
   
     if (isLoading) {
       return <div>Loading...</div>;
