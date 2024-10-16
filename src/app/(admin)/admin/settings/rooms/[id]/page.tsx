@@ -21,7 +21,7 @@ const ShowRoom = ({  params: { id }  }: { params: { id: string } }) => {
     return (
         <div className="h-full w-full p-2">
           <span className="flex justify-between">
-            <h3 className="text-xl font-bold">Room</h3>
+            <h3 className="text-xl font-bold">{data?.name}</h3>
             <span className="flex gap-2">
               <AdminButton>
                 <Link href="/admin/settings/rooms/update">✏️ Edit</Link>
@@ -35,11 +35,11 @@ const ShowRoom = ({  params: { id }  }: { params: { id: string } }) => {
           </span>
           <article className="grid grid-cols-1 gap-6 p-2 sm:grid-cols-2">
             <InfoCard 
-              title={data.name}
+              title="Room Information"
               info={{}}
             >
               <div className="space-y-4 p-6">
-                <p>{data.description}</p>
+                <p>{data?.description}</p>
               </div>
             </InfoCard>  
           </article>
