@@ -1,5 +1,5 @@
 import { createTRPCRouter, teacherProcedure } from "../trpc";
-import { rooms } from "~/server/db/schemas";
+import { rooms, classes } from "~/server/db/schemas";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -35,7 +35,7 @@ export const roomsRouter = createTRPCRouter({
         }).returning();
       return res;
     }),
-    update: teacherProcedure
+  update: teacherProcedure
     .input(
       z.object({
         id: z.string(),
@@ -54,7 +54,7 @@ export const roomsRouter = createTRPCRouter({
         .returning();
       return res;
     }),
-    show: teacherProcedure
+  show: teacherProcedure
     .input(
       z.object({
         id: z.string()
@@ -63,5 +63,24 @@ export const roomsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const [res] = await ctx.db.select().from(rooms).where(eq(rooms.id, input.id)).limit(1);
       return res;
+    }),
+  delete: teacherProcedure
+    .input(
+      z.object({
+        id: z.string()
+      }),
+    )
+    .mutation( async ({ ctx, input }) => {
+      const checkClasses = await ctx.db.select().from(classes).where(eq(classes.roomId, input.id));
+
+      if (!checkClasses) {
+        const res = await ctx.db
+          .delete(rooms)
+          .where(eq(rooms.id, input.id))
+          .returning();
+        return res;
+      } else {
+        return ("You can't delete this room as there are classes scheduled.")
+      }
     }),
 });
