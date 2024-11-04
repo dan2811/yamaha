@@ -73,14 +73,14 @@ export const roomsRouter = createTRPCRouter({
     .mutation( async ({ ctx, input }) => {
       const checkClasses = await ctx.db.select().from(classes).where(eq(classes.roomId, input.id));
 
-      if (!checkClasses) {
+      if (checkClasses.length === 0) {
         const res = await ctx.db
           .delete(rooms)
           .where(eq(rooms.id, input.id))
           .returning();
         return res;
       } else {
-        return ("You can't delete this room as there are classes scheduled.")
+        throw Error ("You can't delete this room as there are classes scheduled.")
       }
     }),
 });
