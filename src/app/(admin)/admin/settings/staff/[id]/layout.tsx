@@ -6,6 +6,7 @@ import InstrumentPill from "~/app/_components/admin/InstrumentPill";
 import { api } from "~/trpc/react";
 import { days } from "~/server/types";
 import WorkingHoursCard from "./WorkingHoursCard";
+import BackButton from "../../../tasters/@show/_backButton";
 
 const EditTeacher = ({
   params: { id },
@@ -37,7 +38,10 @@ const EditTeacher = ({
   }
   return (
     <div className="flex w-full flex-col gap-4 rounded-lg bg-purple-200/60 p-6 text-purple-950">
+      <div className="flex justify-between">
       <h3 className="text-2xl font-medium">{teacher.user?.name}</h3>
+      <BackButton />
+      </div>
       <div>
         <p className="font-light">Instruments</p>
         <div className="flex flex-wrap gap-2">
