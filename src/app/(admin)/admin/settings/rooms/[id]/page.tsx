@@ -5,6 +5,7 @@ import React from "react";
 import Link from "next/link";
 import { api } from "~/trpc/react";
 import { InfoCard } from "~/app/_components/admin/InfoCard";
+import DeleteRoomButton from "~/app/_components/admin/DeleteRoomButton";
 
 
 const ShowRoom = ({  params: { id }  }: { params: { id: string } }) => {
@@ -37,6 +38,7 @@ const ShowRoom = ({  params: { id }  }: { params: { id: string } }) => {
             >
             </InfoCard>  
           </article>
+          <DeleteRoomButton roomId={ id } />
         </div>
     )  
 }
