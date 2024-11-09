@@ -79,8 +79,7 @@ export const roomsRouter = createTRPCRouter({
           .where(eq(rooms.id, input.id))
           .returning(); 
         return res;
-      } else {
-        throw new TRPCError ( {code: "CONFLICT", message: "You can't delete this room as there are classes scheduled."})
-      }
+      };
+      throw new TRPCError ( {code: "CONFLICT", message: "You can't delete this room as there are classes scheduled."})
     }),
 });
