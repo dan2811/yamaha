@@ -1,8 +1,9 @@
 import { createTRPCRouter, teacherProcedure } from "../trpc";
-import { rooms } from "~/server/db/schemas";
+import { rooms, classes } from "~/server/db/schemas";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { TRPCError } from "@trpc/server";
 
 export const roomsRouter = createTRPCRouter({
   list: teacherProcedure
@@ -35,7 +36,7 @@ export const roomsRouter = createTRPCRouter({
         }).returning();
       return res;
     }),
-    update: teacherProcedure
+  update: teacherProcedure
     .input(
       z.object({
         id: z.string(),
@@ -54,7 +55,7 @@ export const roomsRouter = createTRPCRouter({
         .returning();
       return res;
     }),
-    show: teacherProcedure
+  show: teacherProcedure
     .input(
       z.object({
         id: z.string()
@@ -63,5 +64,22 @@ export const roomsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const [res] = await ctx.db.select().from(rooms).where(eq(rooms.id, input.id)).limit(1);
       return res;
+    }),
+  delete: teacherProcedure
+    .input(
+      z.object({
+        id: z.string()
+      }),
+    )
+    .mutation( async ({ ctx, input }) => {
+      const classesInRoom = await ctx.db.select().from(classes).where(eq(classes.roomId, input.id));
+      if (classesInRoom.length === 0) {
+        const res = await ctx.db
+          .delete(rooms)
+          .where(eq(rooms.id, input.id))
+          .returning(); 
+        return res;
+      };
+      throw new TRPCError ( {code: "CONFLICT", message: "You can't delete this room as there are classes scheduled."})
     }),
 });
