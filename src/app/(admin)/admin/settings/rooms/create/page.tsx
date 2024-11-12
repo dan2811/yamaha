@@ -54,8 +54,8 @@ const CreateRoom = () => {
         onSuccess: (room) => {
           toast.success(`New room created`);
           const route = room[0]?.id
-            ? `/admin/rooms/${room[0].id}`
-            : "/admin/rooms/list";
+            ? `/admin/settings/rooms/${room[0].id}`
+            : "/admin/settings/rooms";
           router.push(route);
         },
       },
