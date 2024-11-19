@@ -3,6 +3,7 @@ import { rooms, classes } from "~/server/db/schemas";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { TRPCError } from "@trpc/server";
 
 export const roomsRouter = createTRPCRouter({
   list: teacherProcedure
@@ -71,16 +72,14 @@ export const roomsRouter = createTRPCRouter({
       }),
     )
     .mutation( async ({ ctx, input }) => {
-      const checkClasses = await ctx.db.select().from(classes).where(eq(classes.roomId, input.id));
-
-      if (checkClasses.length === 0) {
+      const classesInRoom = await ctx.db.select().from(classes).where(eq(classes.roomId, input.id));
+      if (classesInRoom.length === 0) {
         const res = await ctx.db
           .delete(rooms)
           .where(eq(rooms.id, input.id))
-          .returning();
+          .returning(); 
         return res;
-      } else {
-        throw Error ("You can't delete this room as there are classes scheduled.")
-      }
+      };
+      throw new TRPCError ( {code: "CONFLICT", message: "You can't delete this room as there are classes scheduled."})
     }),
 });
