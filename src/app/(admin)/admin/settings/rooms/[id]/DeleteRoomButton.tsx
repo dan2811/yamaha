@@ -1,6 +1,6 @@
 import { api } from "~/trpc/react";
 import AdminButton from "~/app/_components/admin/Button";;
-import ConfirmationModal from "./ConfirmationModal";
+import ConfirmationModal from "../../../../../_components/admin/ConfirmationModal";
 import { useState } from 'react';
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
