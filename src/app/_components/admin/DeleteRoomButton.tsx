@@ -3,6 +3,7 @@ import AdminButton from "~/app/_components/admin/Button";;
 import ConfirmationModal from "./ConfirmationModal";
 import { useState } from 'react';
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface DeleteButtonProps {
   roomId: string;
@@ -16,14 +17,11 @@ const DeleteRoomButton: React.FC<DeleteButtonProps> = ({ roomId }) => {
   const deleteItem = api.rooms.delete.useMutation({
     onMutate: () => setIsLoading(true),
     onSuccess: () => {
-      setIsLoading(false);
-      setIsModalOpen(false);
-      alert('Item deleted successfully');
+      toast.success("Item deleted successfully");
       router.push('/admin/settings/rooms')
     },
     onError: (error) => {
-      setIsLoading(false);
-      alert(`Failed to delete: ${error.message}`);
+      toast.error(error.message);
     }
   });
 
